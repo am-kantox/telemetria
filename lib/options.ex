@@ -27,18 +27,15 @@ defmodule Telemetria.Options do
       doc: "OTP application this telemetry is attached to."
     ],
     events: [
-      type: :keyword_list,
-      keys: [
-        *: [
-          type: {:custom, Telemetria.Options, :list, [[{Kernel, :is_atom, []}]]},
-          required: true,
-          doc: """
-          The application-specific events.
+      type:
+        {:custom, Telemetria.Options, :list,
+         [[{Telemetria.Options, :list, [[{Kernel, :is_atom, []}]]}]]},
+      required: true,
+      doc: """
+      The application-specific events.
 
-          See `:telemetry.event_prefix/0` and `:telemetry.event_name/0`.
-          """
-        ]
-      ]
+      See `:telemetry.event_prefix/0` and `:telemetry.event_name/0`.
+      """
     ],
     handler: [
       type: :mfa,

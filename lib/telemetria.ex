@@ -19,17 +19,21 @@ defmodule Telemetria do
     end
   end
 
-  defmacro deft(call, expr),
-    do: define(:def, call, telemetry_wrap(expr, call, __CALLER__), __CALLER__)
+  defmacro deft(call, expr) do
+    expr = telemetry_wrap(expr, call, __CALLER__)
 
-  defmacro defpt(call, expr),
-    do: define(:defp, call, telemetry_wrap(expr, call, __CALLER__), __CALLER__)
+    quote do
+      Kernel.def(unquote(call), unquote(expr))
+    end
+  end
 
-  defmacro defmacrot(call, expr),
-    do: define(:defmacro, call, telemetry_wrap(expr, call, __CALLER__), __CALLER__)
+  defmacro defpt(call, expr) do
+    expr = telemetry_wrap(expr, call, __CALLER__)
 
-  defmacro defmacropt(call, expr),
-    do: define(:defmacrop, call, telemetry_wrap(expr, call, __CALLER__), __CALLER__)
+    quote do
+      Kernel.defp(unquote(call), unquote(expr))
+    end
+  end
 
   @compile {:inline, telemetry_prefix: 1}
 
@@ -73,53 +77,5 @@ defmodule Telemetria do
       end
 
     Keyword.put(expr, :do, block)
-  end
-
-  defp define(kind, call, expr, env) do
-    module = assert_module_scope(env, kind, 2)
-    assert_no_function_scope(env, kind, 2)
-
-    unquoted_call = :elixir_quote.has_unquotes(call)
-    unquoted_expr = :elixir_quote.has_unquotes(expr)
-    escaped_call = :elixir_quote.escape(call, :default, true)
-
-    escaped_expr =
-      case unquoted_expr do
-        true ->
-          :elixir_quote.escape(expr, :default, true)
-
-        false ->
-          key = :erlang.unique_integer()
-          :elixir_module.write_cache(module, key, expr)
-          quote(do: :elixir_module.read_cache(unquote(module), unquote(key)))
-      end
-
-    # Do not check clauses if any expression was unquoted
-    check_clauses = not (unquoted_expr or unquoted_call)
-    pos = :elixir_locals.cache_env(env)
-
-    quote do
-      :elixir_def.store_definition(
-        unquote(kind),
-        unquote(check_clauses),
-        unquote(escaped_call),
-        unquote(escaped_expr),
-        unquote(pos)
-      )
-    end
-  end
-
-  defp assert_module_scope(env, fun, arity) do
-    case env.module do
-      nil -> raise ArgumentError, "cannot invoke #{fun}/#{arity} outside module"
-      mod -> mod
-    end
-  end
-
-  defp assert_no_function_scope(env, fun, arity) do
-    case env.function do
-      nil -> :ok
-      _ -> raise ArgumentError, "cannot invoke #{fun}/#{arity} inside function/macro"
-    end
   end
 end

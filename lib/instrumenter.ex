@@ -12,8 +12,11 @@ defmodule Telemetria.Instrumenter do
   @spec events :: [[atom()]]
   def events, do: @events
 
-  def setup,
-    do: :telemetry.attach_many(otp_app(), events(), &handle_event/4, nil)
+  def setup do
+    Application.stop(:telemetry)
+    Application.start(:telemetry)
+    :telemetry.attach_many(otp_app(), events(), &handle_event/4, nil)
+  end
 
   def handle_event(event, measurements, context, config) do
     {m, f, 4} = Application.get_env(:telemetria, :handler, {Telemetria.Handler, :handle_event, 4})
