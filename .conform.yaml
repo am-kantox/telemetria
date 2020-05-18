@@ -1,0 +1,26 @@
+policies:
+  - type: commit
+    spec:
+      header:
+        length: 50
+        imperative: true
+        case: upper
+        invalidLastCharacters: .
+      body:
+        required: false
+      dco: false
+      gpg: true
+      spellcheck:
+        locale: US
+      maximumOfOneCommit: false
+  - type: license
+    spec:
+      skipPaths:
+        - .git/
+        - .build*/
+      includeSuffixes:
+        - .ext
+      excludeSuffixes:
+        - .exclude-ext-prefix.ext
+      header: |
+        Copyright © 2020 Kantox LTD
