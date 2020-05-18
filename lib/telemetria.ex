@@ -49,6 +49,12 @@ defmodule Telemetria do
     {f, _, _} = call
     event = telemetry_prefix(caller.module) ++ [f]
 
+    Mix.shell().info([
+      [:bright, :green, "[INFO] ", :reset],
+      "Add event: #{inspect(event)} at ",
+      "#{caller.file}:#{caller.line}"
+    ])
+
     :telemetry.attach(
       Telemetria.Instrumenter.otp_app(),
       event,
