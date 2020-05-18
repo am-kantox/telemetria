@@ -75,7 +75,11 @@ defmodule Telemetria do
 
         :telemetry.execute(
           unquote(event),
-          %{system_time: System.system_time(), tc: benchmark},
+          %{
+            reference: reference,
+            system_time: System.system_time(),
+            tc: benchmark
+          },
           %{context: unquote(caller)}
         )
 
