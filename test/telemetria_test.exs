@@ -2,11 +2,12 @@ defmodule Telemetria.Test do
   use ExUnit.Case
   import ExUnit.CaptureLog
   doctest Telemetria
+  alias Test.Telemetria.Example
 
   test "attaches telemetry events and spits out logs" do
     log =
       capture_log(fn ->
-        Test.Telemetria.Example.sum_with_doubled(1, 3)
+        Example.sum_with_doubled(1, 3)
         Process.sleep(100)
       end)
 

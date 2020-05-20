@@ -3,6 +3,7 @@ defmodule Mix.Tasks.Compile.Telemetria do
 
   use Boundary, deps: [], exports: []
   use Mix.Task.Compiler
+  alias Mix.Task.Compiler
 
   @moduledoc """
   Allows compile-time telemetry events definition.
@@ -27,10 +28,10 @@ defmodule Mix.Tasks.Compile.Telemetria do
   ```
   """
 
-  @impl Mix.Task.Compiler
+  @impl Compiler
   def run(argv) do
-    {:module, _} = Application.ensure_started(:telemetry)
-    Mix.Task.Compiler.after_compiler(:app, &after_compiler(&1, argv))
+    :ok = Application.ensure_started(:telemetry)
+    Compiler.after_compiler(:app, &after_compiler(&1, argv))
     {:ok, []}
   end
 
