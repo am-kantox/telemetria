@@ -21,7 +21,7 @@ defmodule Telemetria.MixProject do
       dialyzer: [
         plt_file: {:no_warn, ".dialyzer/plts/dialyzer.plt"},
         plt_add_deps: :transitive,
-        plt_add_apps: [:nimble_options],
+        plt_add_apps: [:nimble_options, :mix],
         list_unused_filters: true,
         ignore_warnings: ".dialyzer/ignore.exs"
       ]
