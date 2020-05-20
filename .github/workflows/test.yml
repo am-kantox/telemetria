@@ -16,8 +16,6 @@ jobs:
         with:
           otp-version: ${{matrix.otp}}
           elixir-version: ${{matrix.elixir}}
-      - name: Conform
-        uses: talos-systems/conform@v0.1.0-alpha.19
       - name: Install → Compile dependencies
         run: |
           MIX_ENV=test mix deps.get
