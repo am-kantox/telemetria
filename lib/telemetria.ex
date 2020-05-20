@@ -35,7 +35,6 @@ defmodule Telemetria do
     end
   end
 
-  @spec t(ast, [atom()] | atom()) :: ast when ast: {atom(), keyword(), tuple()}
   defmacro t(ast, call \\ [])
 
   defmacro t({:fn, meta, clauses}, call) do
@@ -49,9 +48,9 @@ defmodule Telemetria do
 
   defmacro t(ast, call), do: do_t(ast, call, __CALLER__)
 
-  @compile {:inline, do_t: 3}
+  @compile {:inline, do_t: 3, do_t: 4}
   @spec do_t(ast, [atom()] | atom(), Macro.Env.t(), keyword()) :: ast
-        when ast: {atom(), keyword(), tuple()}
+        when ast: {atom(), keyword(), tuple() | list()}
   defp do_t(ast, call, caller, context \\ []) do
     case telemetry_wrap(ast, List.wrap(call), caller, context) do
       [do: ast] -> ast
@@ -60,8 +59,10 @@ defmodule Telemetria do
   end
 
   @compile {:inline, telemetry_prefix: 2}
-
-  @spec telemetry_prefix(Macro.Env.t(), {atom(), keyword(), tuple()} | nil) :: [atom()]
+  @spec telemetry_prefix(
+          Macro.Env.t(),
+          {atom(), keyword(), tuple()} | nil | maybe_improper_list()
+        ) :: [atom()]
   defp telemetry_prefix(%Macro.Env{module: mod, function: fun}, call) do
     suffix =
       case fun do
@@ -86,16 +87,9 @@ defmodule Telemetria do
     prefix ++ suffix
   end
 
-  @spec telemetry_wrap(any(), any(), Macro.Env.t(), keyword()) :: any()
-  defp telemetry_wrap(expr, call, caller, context \\ [])
-
-  # defp telemetry_wrap(nil, call, %Macro.Env{} = caller, context) do
-  #   IO.inspect({nil, call, caller, context})
-  #   report(telemetry_prefix(caller, call), caller)
-  #   nil
-  # end
-
-  defp telemetry_wrap(expr, call, %Macro.Env{} = caller, context) do
+  @spec telemetry_wrap(ast, maybe_improper_list(), Macro.Env.t(), keyword()) :: ast
+        when ast: keyword() | {atom(), keyword(), tuple() | list()}
+  defp telemetry_wrap(expr, call, %Macro.Env{} = caller, context \\ []) do
     {block, expr} =
       if Keyword.keyword?(expr) do
         Keyword.pop(expr, :do, [])
