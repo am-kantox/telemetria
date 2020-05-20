@@ -52,10 +52,9 @@ defmodule Telemetria do
   @spec do_t(ast, [atom()] | atom(), Macro.Env.t(), keyword()) :: ast
         when ast: {atom(), keyword(), tuple() | list()}
   defp do_t(ast, call, caller, context \\ []) do
-    case telemetry_wrap(ast, List.wrap(call), caller, context) do
-      [do: ast] -> ast
-      ast -> ast
-    end
+    ast
+    |> telemetry_wrap(List.wrap(call), caller, context)
+    |> Keyword.get(:do, [])
   end
 
   @compile {:inline, telemetry_prefix: 2}
