@@ -15,11 +15,11 @@ defmodule Test.Telemetria.Example do
 
   def half(a) do
     divider =
-      t(fn
+      t fn
         a when is_integer(a) -> a / 2
         {a, _, _} -> a
         _ -> nil
-      end)
+      end
 
     divider.(a)
   end
