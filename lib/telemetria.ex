@@ -35,25 +35,73 @@ defmodule Telemetria do
     end
   end
 
-  @compile {:inline, telemetry_prefix: 1}
+  @spec t(ast, [atom()] | atom()) :: ast when ast: {atom(), keyword(), tuple()}
+  defmacro t(ast, call \\ [])
 
-  @spec telemetry_prefix(module()) :: [atom()]
-  defp telemetry_prefix(mod),
-    do: mod |> Module.split() |> Enum.map(&(&1 |> Macro.underscore() |> String.to_atom()))
+  defmacro t({:fn, meta, clauses}, call) do
+    clauses =
+      for {:->, meta, [args, clause]} <- clauses do
+        {:->, meta, [args, do_t(clause, call, __CALLER__)]}
+      end
 
-  defp telemetry_wrap(nil, _call, _caller), do: nil
+    {:fn, meta, clauses}
+  end
 
-  defp telemetry_wrap(expr, call, caller) do
-    {block, expr} = Keyword.pop(expr, :do, [])
+  defmacro t(ast, call), do: do_t(ast, call, __CALLER__)
 
-    {f, _, _} = call
-    event = telemetry_prefix(caller.module) ++ [f]
+  @compile {:inline, do_t: 3}
+  @spec do_t(ast, [atom()] | atom(), Macro.Env.t()) :: ast when ast: {atom(), keyword(), tuple()}
+  defp do_t(ast, call, caller) do
+    case telemetry_wrap(ast, List.wrap(call), caller) do
+      [do: ast] -> ast
+      ast -> ast
+    end
+  end
 
-    Mix.shell().info([
-      [:bright, :green, "[INFO] ", :reset],
-      "Add event: #{inspect(event)} at ",
-      "#{caller.file}:#{caller.line}"
-    ])
+  @compile {:inline, telemetry_prefix: 2}
+
+  @spec telemetry_prefix(Macro.Env.t(), {atom(), keyword(), tuple()} | nil) :: [atom()]
+  defp telemetry_prefix(%Macro.Env{module: mod, function: fun}, call) do
+    suffix =
+      case fun do
+        {f, _arity} -> [f]
+        _ -> []
+      end ++
+        case call do
+          [_ | _] = suffices -> suffices
+          {f, _, _} when is_atom(f) -> [f]
+          _ -> []
+        end
+
+    prefix =
+      case mod do
+        nil ->
+          [:module_scope]
+
+        mod when is_atom(mod) ->
+          mod |> Module.split() |> Enum.map(&(&1 |> Macro.underscore() |> String.to_atom()))
+      end
+
+    prefix ++ suffix
+  end
+
+  @spec telemetry_wrap(any(), any(), Macro.Env.t()) :: any()
+  defp telemetry_wrap(nil, call, %Macro.Env{} = caller) do
+    report(telemetry_prefix(caller, call), caller)
+    nil
+  end
+
+  defp telemetry_wrap(expr, call, %Macro.Env{} = caller) do
+    {block, expr} =
+      if Keyword.keyword?(expr) do
+        Keyword.pop(expr, :do, [])
+      else
+        {expr, []}
+      end
+
+    event = telemetry_prefix(caller, call)
+
+    report(event, caller)
 
     :telemetry.attach(
       Telemetria.Instrumenter.otp_app(),
@@ -62,7 +110,9 @@ defmodule Telemetria do
       nil
     )
 
-    Module.put_attribute(caller.module, :doc, {caller.line, telemetry: true})
+    unless is_nil(caller.module),
+      do: Module.put_attribute(caller.module, :doc, {caller.line, telemetry: true})
+
     caller = Macro.escape(caller)
 
     block =
@@ -87,5 +137,13 @@ defmodule Telemetria do
       end
 
     Keyword.put(expr, :do, block)
+  end
+
+  defp report(event, caller) do
+    Mix.shell().info([
+      [:bright, :green, "[INFO] ", :reset],
+      "Add event: #{inspect(event)} at ",
+      "#{caller.file}:#{caller.line}"
+    ])
   end
 end
