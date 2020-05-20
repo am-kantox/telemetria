@@ -41,7 +41,7 @@ defmodule Telemetria do
   defmacro t({:fn, meta, clauses}, call) do
     clauses =
       for {:->, meta, [args, clause]} <- clauses do
-        {:->, meta, [args, do_t(clause, call, __CALLER__)]}
+        {:->, meta, [args, do_t(clause, call, __CALLER__, arguments: extract_guards(args))]}
       end
 
     {:fn, meta, clauses}
@@ -50,9 +50,10 @@ defmodule Telemetria do
   defmacro t(ast, call), do: do_t(ast, call, __CALLER__)
 
   @compile {:inline, do_t: 3}
-  @spec do_t(ast, [atom()] | atom(), Macro.Env.t()) :: ast when ast: {atom(), keyword(), tuple()}
-  defp do_t(ast, call, caller) do
-    case telemetry_wrap(ast, List.wrap(call), caller) do
+  @spec do_t(ast, [atom()] | atom(), Macro.Env.t(), keyword()) :: ast
+        when ast: {atom(), keyword(), tuple()}
+  defp do_t(ast, call, caller, context \\ []) do
+    case telemetry_wrap(ast, List.wrap(call), caller, context) do
       [do: ast] -> ast
       ast -> ast
     end
@@ -85,13 +86,16 @@ defmodule Telemetria do
     prefix ++ suffix
   end
 
-  @spec telemetry_wrap(any(), any(), Macro.Env.t()) :: any()
-  defp telemetry_wrap(nil, call, %Macro.Env{} = caller) do
-    report(telemetry_prefix(caller, call), caller)
-    nil
-  end
+  @spec telemetry_wrap(any(), any(), Macro.Env.t(), keyword()) :: any()
+  defp telemetry_wrap(expr, call, caller, context \\ [])
 
-  defp telemetry_wrap(expr, call, %Macro.Env{} = caller) do
+  # defp telemetry_wrap(nil, call, %Macro.Env{} = caller, context) do
+  #   IO.inspect({nil, call, caller, context})
+  #   report(telemetry_prefix(caller, call), caller)
+  #   nil
+  # end
+
+  defp telemetry_wrap(expr, call, %Macro.Env{} = caller, context) do
     {block, expr} =
       if Keyword.keyword?(expr) do
         Keyword.pop(expr, :do, [])
@@ -119,18 +123,23 @@ defmodule Telemetria do
       quote do
         reference = inspect(make_ref())
 
-        now = System.monotonic_time(:microsecond)
+        now = [
+          system: System.system_time(),
+          monotonic: System.monotonic_time(:microsecond),
+          utc: DateTime.utc_now()
+        ]
+
         result = unquote(block)
-        benchmark = System.monotonic_time(:microsecond) - now
+        benchmark = System.monotonic_time(:microsecond) - now[:monotonic]
 
         :telemetry.execute(
           unquote(event),
           %{
             reference: reference,
-            system_time: System.system_time(),
-            tc: benchmark
+            system_time: now,
+            consumed: benchmark
           },
-          %{context: unquote(caller)}
+          %{env: unquote(caller), context: unquote(context)}
         )
 
         result
@@ -146,4 +155,29 @@ defmodule Telemetria do
       "#{caller.file}:#{caller.line}"
     ])
   end
+
+  defp variablize({:_, _, _}), do: {:_, :skipped}
+  defp variablize({:{}, _, elems}), do: {:tuple, Enum.map(elems, &variablize/1)}
+  defp variablize({:%{}, _, elems}), do: {:map, Enum.map(elems, &variablize/1)}
+  defp variablize({var, _, _} = val), do: {var, val}
+
+  defp extract_guards([]), do: []
+
+  defp extract_guards([_ | _] = list) do
+    list
+    |> Enum.map(&extract_guards/1)
+    |> Enum.map(fn
+      {:_, _, _} = underscore -> variablize(underscore)
+      {{op, _, _} = term, _guards} when op in [:{}, :%{}] -> variablize(term)
+      {{_, _, _} = val, _guards} -> variablize(val)
+      {_, _, _} = val -> variablize(val)
+      other -> {:unknown, inspect(other)}
+    end)
+  end
+
+  defp extract_guards({:when, _, [l, r]}), do: {l, extract_or_guards(r)}
+  defp extract_guards(other), do: {other, []}
+
+  defp extract_or_guards({:when, _, [l, r]}), do: [l | extract_or_guards(r)]
+  defp extract_or_guards(other), do: [other]
 end

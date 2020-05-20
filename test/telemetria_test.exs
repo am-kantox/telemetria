@@ -18,11 +18,12 @@ defmodule Telemetria.Test do
   test "attaches telemetry events to anonymous local functions and spits out logs" do
     log =
       capture_log(fn ->
-        Example.half(4)
+        Example.half(42)
         Process.sleep(100)
       end)
 
     assert log =~ "[:test, :telemetria, :example, :half]"
+    assert log =~ "arguments: [a: 42]"
   end
 
   test "attaches telemetry events named and spits out logs" do

@@ -17,6 +17,7 @@ defmodule Test.Telemetria.Example do
     divider =
       t(fn
         a when is_integer(a) -> a / 2
+        {a, _, _} -> a
         _ -> nil
       end)
 
