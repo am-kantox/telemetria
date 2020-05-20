@@ -1,4 +1,4 @@
-locals_without_parens = [deft: :*, defpt: :*, defmacrot: :*, defmacropt: :*]
+locals_without_parens = [deft: 2, defpt: 2, t: 1, t: 2]
 
 [
   inputs: ["{mix,.formatter}.exs", "{config,lib,test}/**/*.{ex,exs}"],

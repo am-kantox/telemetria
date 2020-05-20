@@ -35,25 +35,70 @@ defmodule Telemetria do
     end
   end
 
-  @compile {:inline, telemetry_prefix: 1}
+  defmacro t(ast, call \\ [])
 
-  @spec telemetry_prefix(module()) :: [atom()]
-  defp telemetry_prefix(mod),
-    do: mod |> Module.split() |> Enum.map(&(&1 |> Macro.underscore() |> String.to_atom()))
+  defmacro t({:fn, meta, clauses}, call) do
+    clauses =
+      for {:->, meta, [args, clause]} <- clauses do
+        {:->, meta, [args, do_t(clause, call, __CALLER__, arguments: extract_guards(args))]}
+      end
 
-  defp telemetry_wrap(nil, _call, _caller), do: nil
+    {:fn, meta, clauses}
+  end
 
-  defp telemetry_wrap(expr, call, caller) do
-    {block, expr} = Keyword.pop(expr, :do, [])
+  defmacro t(ast, call), do: do_t(ast, call, __CALLER__)
 
-    {f, _, _} = call
-    event = telemetry_prefix(caller.module) ++ [f]
+  @compile {:inline, do_t: 3, do_t: 4}
+  @spec do_t(ast, [atom()] | atom(), Macro.Env.t(), keyword()) :: ast
+        when ast: {atom(), keyword(), tuple() | list()}
+  defp do_t(ast, call, caller, context \\ []) do
+    ast
+    |> telemetry_wrap(List.wrap(call), caller, context)
+    |> Keyword.get(:do, [])
+  end
 
-    Mix.shell().info([
-      [:bright, :green, "[INFO] ", :reset],
-      "Add event: #{inspect(event)} at ",
-      "#{caller.file}:#{caller.line}"
-    ])
+  @compile {:inline, telemetry_prefix: 2}
+  @spec telemetry_prefix(
+          Macro.Env.t(),
+          {atom(), keyword(), tuple()} | nil | maybe_improper_list()
+        ) :: [atom()]
+  defp telemetry_prefix(%Macro.Env{module: mod, function: fun}, call) do
+    suffix =
+      case fun do
+        {f, _arity} -> [f]
+        _ -> []
+      end ++
+        case call do
+          [_ | _] = suffices -> suffices
+          {f, _, _} when is_atom(f) -> [f]
+          _ -> []
+        end
+
+    prefix =
+      case mod do
+        nil ->
+          [:module_scope]
+
+        mod when is_atom(mod) ->
+          mod |> Module.split() |> Enum.map(&(&1 |> Macro.underscore() |> String.to_atom()))
+      end
+
+    prefix ++ suffix
+  end
+
+  @spec telemetry_wrap(ast, maybe_improper_list(), Macro.Env.t(), keyword()) :: ast
+        when ast: keyword() | {atom(), keyword(), tuple() | list()}
+  defp telemetry_wrap(expr, call, %Macro.Env{} = caller, context \\ []) do
+    {block, expr} =
+      if Keyword.keyword?(expr) do
+        Keyword.pop(expr, :do, [])
+      else
+        {expr, []}
+      end
+
+    event = telemetry_prefix(caller, call)
+
+    report(event, caller)
 
     :telemetry.attach(
       Telemetria.Instrumenter.otp_app(),
@@ -62,25 +107,32 @@ defmodule Telemetria do
       nil
     )
 
-    Module.put_attribute(caller.module, :doc, {caller.line, telemetry: true})
+    unless is_nil(caller.module),
+      do: Module.put_attribute(caller.module, :doc, {caller.line, telemetry: true})
+
     caller = Macro.escape(caller)
 
     block =
       quote do
         reference = inspect(make_ref())
 
-        now = System.monotonic_time(:microsecond)
+        now = [
+          system: System.system_time(),
+          monotonic: System.monotonic_time(:microsecond),
+          utc: DateTime.utc_now()
+        ]
+
         result = unquote(block)
-        benchmark = System.monotonic_time(:microsecond) - now
+        benchmark = System.monotonic_time(:microsecond) - now[:monotonic]
 
         :telemetry.execute(
           unquote(event),
           %{
             reference: reference,
-            system_time: System.system_time(),
-            tc: benchmark
+            system_time: now,
+            consumed: benchmark
           },
-          %{context: unquote(caller)}
+          %{env: unquote(caller), context: unquote(context)}
         )
 
         result
@@ -88,4 +140,37 @@ defmodule Telemetria do
 
     Keyword.put(expr, :do, block)
   end
+
+  defp report(event, caller) do
+    Mix.shell().info([
+      [:bright, :green, "[INFO] ", :reset],
+      "Add event: #{inspect(event)} at ",
+      "#{caller.file}:#{caller.line}"
+    ])
+  end
+
+  defp variablize({:_, _, _}), do: {:_, :skipped}
+  defp variablize({:{}, _, elems}), do: {:tuple, Enum.map(elems, &variablize/1)}
+  defp variablize({:%{}, _, elems}), do: {:map, Enum.map(elems, &variablize/1)}
+  defp variablize({var, _, _} = val), do: {var, val}
+
+  defp extract_guards([]), do: []
+
+  defp extract_guards([_ | _] = list) do
+    list
+    |> Enum.map(&extract_guards/1)
+    |> Enum.map(fn
+      {:_, _, _} = underscore -> variablize(underscore)
+      {{op, _, _} = term, _guards} when op in [:{}, :%{}] -> variablize(term)
+      {{_, _, _} = val, _guards} -> variablize(val)
+      {_, _, _} = val -> variablize(val)
+      other -> {:unknown, inspect(other)}
+    end)
+  end
+
+  defp extract_guards({:when, _, [l, r]}), do: {l, extract_or_guards(r)}
+  defp extract_guards(other), do: {other, []}
+
+  defp extract_or_guards({:when, _, [l, r]}), do: [l | extract_or_guards(r)]
+  defp extract_or_guards(other), do: [other]
 end
