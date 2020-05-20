@@ -39,6 +39,7 @@ defmodule Telemetria.MixProject do
   defp deps do
     [
       {:boundary, "~> 0.4", runtime: false},
+      {:telemetry, "~> 0.4"},
       {:nimble_options, "~> 0.2"},
       # dev / test
       {:dialyxir, "~> 1.0.0", only: [:dev, :test, :ci]},
@@ -95,6 +96,6 @@ defmodule Telemetria.MixProject do
 
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(:ci), do: ["lib", "test/support"]
-  #  defp elixirc_paths(:dev), do: ["lib", "test/support"]
+  defp elixirc_paths(:dev), do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
 end

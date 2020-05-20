@@ -1,5 +1,6 @@
-defmodule TelemetriaTest do
+defmodule Telemetria.Test do
   use ExUnit.Case
+  import ExUnit.CaptureLog
   doctest Telemetria
   alias Test.Telemetria.Example
 
