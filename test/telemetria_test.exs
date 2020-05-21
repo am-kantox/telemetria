@@ -45,4 +45,14 @@ defmodule Telemetria.Test do
 
     assert log =~ "[:test, :telemetria, :example, :tmed]"
   end
+
+  test "attaches telemetry events to random ast with do-end syntax and spits out logs" do
+    log =
+      capture_log(fn ->
+        Example.tmed_do()
+        Process.sleep(100)
+      end)
+
+    assert log =~ "[:test, :telemetria, :example, :tmed_do]"
+  end
 end
