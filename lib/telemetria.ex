@@ -80,6 +80,10 @@ defmodule Telemetria do
     ]
   ]
   ```
+
+  ## Options
+
+  #{NimbleOptions.docs(Telemetria.Options.schema())}
   """
 
   use Boundary, deps: [Telemetria.Instrumenter, Telemetria.Mix.Events], exports: []
