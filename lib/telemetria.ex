@@ -1,6 +1,85 @@
 defmodule Telemetria do
   @moduledoc """
-  Declares helpers to define functions with telemetria attached.
+  `Telemetría` is the opinionated wrapper for [`:telemetry`](https://hexdocs.pm/telemetry)
+  providing handy macroses to attach telemetry events to any function, private function,
+  anonymous functions (on per-clause basis) and just random set of expressions.
+
+  `Telemetría` exports three macroses:
+
+  - `deft/2` which is wrapping `Kernel.def/2`
+  - `defpt/2` which is wrapping `Kernel.defp/2`
+  - `t/2` which is wrapping the expression passed as the first parameter
+    and adds the options passed as a keyword to the second parameter to the
+    context of the respective telemetry event
+
+  `Telemetría` allows compile-time telemetry events definition and provides
+  a compiler that is responsible for incremental builds and updates of the list of
+  events telemetry is sware about.
+
+  ## Advantages
+
+  `Telemetría` takes care about managing events in the target application,
+  makes it a single-letter change to turn a function into a function wrapped
+  with telemetry call, measuring the execution time out of the box.
+
+  It also allows to easily convert expressions to be be telemetry-aware.
+
+  Besides that, `telemetry: false` flag allows to purge the calls in compile-time
+  resulting in zero overhead (useful for benchmark, or like.)
+
+  ## Example
+
+  You need to include the compiler in `mix.exs`:
+
+  ```elixir
+  defmodule MyApp.MixProject do
+    def project do
+      [
+        # ...
+        compilers: [:telemetria | Mix.compilers()],
+        # ...
+      ]
+    end
+    # ...
+  end
+  ```
+
+  In the modules you want to add telemetry to, you should `require Telemetria` (or,
+  preferrably, `import Telemetria` to make it available without FQN.) Once imported,
+  the macros are available and tracked by the compiler.
+
+  ```elixir
+  defmodule MyMod do
+    import Telemetria
+
+    defpt pi, do: 3.14
+    deft answer, do: 42 - pi()
+
+    def inner do
+      short_result = t(42 * 42)
+      result =
+        t do
+          # long calculations
+          :ok
+        end
+    end
+  end
+  ```
+
+  ## Use in releases
+
+  `:telemetria` compiler keeps track of the events in the compiler manifest file
+  to support incremental builds. Also it spits out `config/.telemetria.config.json`
+  config for convenience. It might be used in in the release configuration as shown below.
+
+  ```elixir
+  releases: [
+    configured: [
+      # ...,
+      config_providers: [{Telemetria.ConfigProvider, "/etc/telemetria.json"}]
+    ]
+  ]
+  ```
   """
 
   use Boundary, deps: [Telemetria.Instrumenter, Telemetria.Mix.Events], exports: []
@@ -8,7 +87,12 @@ defmodule Telemetria do
   alias Telemetria.Mix.Events
 
   defmodule Handler do
-    @moduledoc "Default handler used unless the custom one is specified in config"
+    @moduledoc """
+    Default handler used unless the custom one is specified in config.
+
+    This handler collects `event`, `measurements`, `metadata`, and `config`,
+    packs them into the keyword list and logs on `:info` log level.
+    """
 
     require Logger
     use Boundary, deps: [], exports: []
@@ -17,10 +101,11 @@ defmodule Telemetria do
     def handle_event(event, measurements, metadata, config) do
       [event: event, measurements: measurements, metadata: metadata, config: config]
       |> inspect()
-      |> Logger.warn()
+      |> Logger.info()
     end
   end
 
+  @doc "Declares a function with a telemetry attached, neasuring execution time"
   defmacro deft(call, expr) do
     expr = telemetry_wrap(expr, call, __CALLER__)
 
@@ -29,6 +114,7 @@ defmodule Telemetria do
     end
   end
 
+  @doc "Declares a private function with a telemetry attached, neasuring execution time"
   defmacro defpt(call, expr) do
     expr = telemetry_wrap(expr, call, __CALLER__)
 
@@ -37,25 +123,29 @@ defmodule Telemetria do
     end
   end
 
-  defmacro t(ast, call \\ [])
+  @doc "Attaches telemetry to anonymous function (per clause,) or to expression(s)"
+  defmacro t(ast, opts \\ [])
 
-  defmacro t({:fn, meta, clauses}, call) do
+  defmacro t({:fn, meta, clauses}, opts) do
     clauses =
       for {:->, meta, [args, clause]} <- clauses do
-        {:->, meta, [args, do_t(clause, call, __CALLER__, arguments: extract_guards(args))]}
+        {:->, meta,
+         [args, do_t(clause, Keyword.merge([arguments: extract_guards(args)], opts), __CALLER__)]}
       end
 
     {:fn, meta, clauses}
   end
 
-  defmacro t(ast, call), do: do_t(ast, call, __CALLER__)
+  defmacro t(ast, opts), do: do_t(ast, opts, __CALLER__)
 
-  @compile {:inline, do_t: 3, do_t: 4}
-  @spec do_t(ast, [atom()] | atom(), Macro.Env.t(), keyword()) :: ast
+  @compile {:inline, do_t: 3}
+  @spec do_t(ast, keyword(), Macro.Env.t()) :: ast
         when ast: {atom(), keyword(), tuple() | list()}
-  defp do_t(ast, call, caller, context \\ []) do
+  defp do_t(ast, opts, caller) do
+    {suffix, opts} = Keyword.pop(opts, :suffix)
+
     ast
-    |> telemetry_wrap(List.wrap(call), caller, context)
+    |> telemetry_wrap(List.wrap(suffix), caller, opts)
     |> Keyword.get(:do, [])
   end
 

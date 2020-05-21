@@ -1,37 +1,17 @@
 defmodule Mix.Tasks.Compile.Telemetria do
   # credo:disable-for-this-file Credo.Check.Readability.Specs
+  @moduledoc false
 
   use Boundary, deps: [Telemetria.Mix.Events], exports: []
+
   use Mix.Task.Compiler
+
   alias Mix.Task.Compiler
   alias Telemetria.Mix.Events
 
   @preferred_cli_env :dev
   @manifest_events "telemetria_events"
   @json_config Path.join(["config", ".telemetria.config.json"])
-
-  @moduledoc """
-  Allows compile-time telemetry events definition.
-
-  ## Usage
-
-  You need to include the compiler in `mix.exs`:
-
-  ```
-  defmodule MySystem.MixProject do
-    # ...
-
-    def project do
-      [
-        compilers: [:telemetria] ++ Mix.compilers(),
-        # ...
-      ]
-    end
-
-    # ...
-  end
-  ```
-  """
 
   @impl Compiler
   def run(argv) do

@@ -1,6 +1,8 @@
 Application.ensure_started(:telemetry)
 
 defmodule Test.Telemetria.Example do
+  @moduledoc false
+
   use Boundary, deps: [Telemetria], exports: []
 
   import Telemetria
@@ -15,18 +17,24 @@ defmodule Test.Telemetria.Example do
 
   def half(a) do
     divider =
-      t fn
+      t(fn
         a when is_integer(a) -> a / 2
         {a, _, _} -> a
         _ -> nil
-      end
+      end)
 
     divider.(a)
   end
 
   def half_named(a) do
-    t(&(&1 / 2), :foo).(a)
+    t(&(&1 / 2), suffix: :foo).(a)
   end
 
   def tmed, do: t(21 + 21)
+
+  def tmed_do do
+    t do
+      84 / 2
+    end
+  end
 end
