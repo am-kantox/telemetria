@@ -40,6 +40,7 @@ defmodule Telemetria.MixProject do
     [
       {:boundary, "~> 0.4", runtime: false},
       {:telemetry, "~> 0.4"},
+      {:jason, "~> 1.0"},
       {:nimble_options, "~> 0.2"},
       # dev / test
       {:dialyxir, "~> 1.0.0", only: [:dev, :test, :ci]},

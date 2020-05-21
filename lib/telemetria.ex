@@ -3,7 +3,9 @@ defmodule Telemetria do
   Declares helpers to define functions with telemetria attached.
   """
 
-  use Boundary, deps: [Telemetria.Instrumenter], exports: []
+  use Boundary, deps: [Telemetria.Instrumenter, Telemetria.Mix.Events], exports: []
+
+  alias Telemetria.Mix.Events
 
   defmodule Handler do
     @moduledoc "Default handler used unless the custom one is specified in config"
@@ -100,13 +102,6 @@ defmodule Telemetria do
 
     report(event, caller)
 
-    :telemetry.attach(
-      Telemetria.Instrumenter.otp_app(),
-      event,
-      &Telemetria.Instrumenter.handle_event/4,
-      nil
-    )
-
     unless is_nil(caller.module),
       do: Module.put_attribute(caller.module, :doc, {caller.line, telemetry: true})
 
@@ -142,11 +137,21 @@ defmodule Telemetria do
   end
 
   defp report(event, caller) do
-    Mix.shell().info([
-      [:bright, :green, "[INFO] ", :reset],
-      "Add event: #{inspect(event)} at ",
-      "#{caller.file}:#{caller.line}"
-    ])
+    if is_nil(GenServer.whereis(Events)) do
+      Mix.shell().info([
+        [:bright, :green, "[INFO] ", :reset],
+        "Added event: #{inspect(event)} at ",
+        "#{caller.file}:#{caller.line}"
+      ])
+
+      Mix.shell().info([
+        [:bright, :yellow, "[WARN] ", :reset],
+        "Telemetria config won’t be updated! ",
+        "Add `:telemetria` compiler to `compilers:` in your `mix.exs`!"
+      ])
+    else
+      Events.put(:event, {caller.module, event})
+    end
   end
 
   defp variablize({:_, _, _}), do: {:_, :skipped}

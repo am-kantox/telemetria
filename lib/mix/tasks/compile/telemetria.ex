@@ -1,9 +1,14 @@
 defmodule Mix.Tasks.Compile.Telemetria do
   # credo:disable-for-this-file Credo.Check.Readability.Specs
 
-  use Boundary, deps: [], exports: []
+  use Boundary, deps: [Telemetria.Mix.Events], exports: []
   use Mix.Task.Compiler
   alias Mix.Task.Compiler
+  alias Telemetria.Mix.Events
+
+  @preferred_cli_env :dev
+  @manifest_events "telemetria_events"
+  @json_config Path.join(["config", ".telemetria.config.json"])
 
   @moduledoc """
   Allows compile-time telemetry events definition.
@@ -31,20 +36,162 @@ defmodule Mix.Tasks.Compile.Telemetria do
   @impl Compiler
   def run(argv) do
     :ok = Application.ensure_started(:telemetry)
+    Events.start_link()
+
     Compiler.after_compiler(:app, &after_compiler(&1, argv))
+
+    tracers = Code.get_compiler_option(:tracers)
+    Code.put_compiler_option(:tracers, [__MODULE__ | tracers])
+
     {:ok, []}
   end
 
-  defp after_compiler({:error, _} = status, _argv), do: status
+  @doc false
+  @impl Compiler
+  def manifests, do: [manifest_path(@manifest_events)]
 
-  defp after_compiler({status, diagnostics}, _argv) when status in [:ok, :noop] do
-    app_name = Keyword.fetch!(Mix.Project.config(), :app)
+  @doc false
+  @impl Compiler
+  def clean do
+    with {:ok, files} <- File.rm_rf(@json_config),
+         do: Mix.shell().info("Telemetria JSON config cleaned up: #{inspect(files)}")
 
-    # We're reloading the app to make sure we have the latest version. This fixes potential stale state in ElixirLS.
-    Application.unload(app_name)
-    Application.load(app_name)
+    :ok
+  end
 
-    Mix.Shell.IO.info("Telemetry events registered: ...")
-    {status, diagnostics}
+  @doc false
+  def trace({remote, meta, Telemetria, name, arity}, env)
+      when remote in ~w/remote_macro imported_macro/a do
+    pos = if Keyword.keyword?(meta), do: Keyword.get(meta, :line, env.line)
+    message = "Added telemetry call through #{remote} {#{name}, #{arity}}"
+
+    Events.put(
+      :diagnostic,
+      diagnostic(message, details: env.context, position: pos, file: env.file)
+    )
+
+    :ok
+  end
+
+  def trace(_event, _env), do: :ok
+
+  @spec store_config :: :ok | {:error, :manifest_missing}
+  def store_config, do: @manifest_events |> read_manifest() |> do_store_config()
+
+  @spec do_store_config(nil | term()) :: :ok | {:error, any()}
+  defp do_store_config(nil), do: {:error, :manifest_missing}
+
+  defp do_store_config(manifest) do
+    json = Jason.encode!(%{otp_app: app_name(), events: Enum.flat_map(manifest, &elem(&1, 1))})
+
+    File.mkdir_p!(Path.dirname(@json_config))
+    File.write!(@json_config, json)
+  end
+
+  @spec app_name :: atom()
+  defp app_name, do: Keyword.fetch!(Mix.Project.config(), :app)
+
+  @spec after_compiler({status, [Mix.Task.Compiler.Diagnostic.t()]}, any()) ::
+          {status, [Mix.Task.Compiler.Diagnostic.t()]}
+        when status: atom()
+  defp after_compiler({status, diagnostics}, _argv) do
+    # If succeeded, we're reloading the app to make sure we have the latest version.
+    # This fixes potential stale state in ElixirLS.
+    if status in [:ok, :noop] do
+      app_name = app_name()
+      Application.unload(app_name)
+      Application.load(app_name)
+    end
+
+    tracers = Enum.reject(Code.get_compiler_option(:tracers), &(&1 == __MODULE__))
+    Code.put_compiler_option(:tracers, tracers)
+
+    %{events: events, diagnostics: telemetria_diagnostics} = Events.all()
+
+    [full, added, removed] =
+      @manifest_events
+      |> read_manifest()
+      |> case do
+        nil ->
+          [events, events, %{}]
+
+        old ->
+          {related, rest} = Map.split(old, Map.keys(events))
+          related_old = MapSet.new(Enum.flat_map(related, &elem(&1, 1)))
+          related_new = MapSet.new(Enum.flat_map(events, &elem(&1, 1)))
+
+          [
+            Map.merge(rest, events),
+            MapSet.difference(related_new, related_old),
+            MapSet.difference(related_old, related_new)
+          ]
+      end
+
+    write_manifest(@manifest_events, full)
+
+    [added, removed]
+    |> Enum.map(&Enum.map(&1, fn m -> inspect(m, limit: :infinity) end))
+    |> case do
+      [[], []] ->
+        Mix.shell().info("Telemetry events were not updated")
+
+      [[], rem] ->
+        ["Telemetry events removed:" | rem]
+        |> Enum.join("\n  - ")
+        |> Mix.shell().info()
+
+      [add, []] ->
+        ["Telemetry events added:  " | add]
+        |> Enum.join("\n  - ")
+        |> Mix.shell().info()
+
+      [add, rem] ->
+        Mix.shell().info(
+          "Telemetry events:\n" <>
+            Enum.join(["  - added:" | add], "\n    - ") <>
+            Enum.join(["  - removed:" | rem], "\n    - ")
+        )
+    end
+
+    {status, diagnostics ++ MapSet.to_list(telemetria_diagnostics)}
+  end
+
+  @spec diagnostic(message :: binary(), opts :: keyword()) :: Mix.Task.Compiler.Diagnostic.t()
+  defp diagnostic(message, opts) do
+    %Mix.Task.Compiler.Diagnostic{
+      compiler_name: "telemetria",
+      details: nil,
+      file: "unknown",
+      message: message,
+      position: nil,
+      severity: :information
+    }
+    |> Map.merge(Map.new(opts))
+  end
+
+  @spec manifest_path(binary()) :: binary()
+  defp manifest_path(name),
+    do: Mix.Project.config() |> Mix.Project.manifest_path() |> Path.join("compile.#{name}")
+
+  @spec read_manifest(binary()) :: term()
+  defp read_manifest(name) do
+    unless Mix.Utils.stale?([Mix.Project.config_mtime()], [manifest_path(name)]) do
+      name
+      |> manifest_path()
+      |> File.read()
+      |> case do
+        {:ok, manifest} -> :erlang.binary_to_term(manifest)
+        _ -> nil
+      end
+    end
+  end
+
+  @spec write_manifest(binary(), term()) :: :ok
+  defp write_manifest(name, data) do
+    path = manifest_path(name)
+    File.mkdir_p!(Path.dirname(path))
+    File.write!(path, :erlang.term_to_binary(data))
+
+    do_store_config(data)
   end
 end
