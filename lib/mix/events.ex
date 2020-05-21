@@ -4,7 +4,7 @@ defmodule Telemetria.Mix.Events do
   use Agent
 
   def start_link(),
-    do: Agent.start_link(fn -> %{events: %{}, modules: MapSet.new()} end, name: __MODULE__)
+    do: Agent.start_link(fn -> %{events: %{}, diagnostics: MapSet.new()} end, name: __MODULE__)
 
   def all, do: Agent.get(__MODULE__, & &1)
 
@@ -18,10 +18,10 @@ defmodule Telemetria.Mix.Events do
     )
   end
 
-  def put(:module, module),
+  def put(:diagnostic, diagnostic),
     do:
       Agent.update(
         __MODULE__,
-        &Map.update!(&1, :modules, fn modules -> MapSet.put(modules, module) end)
+        &Map.update!(&1, :diagnostics, fn diagnostics -> MapSet.put(diagnostics, diagnostic) end)
       )
 end

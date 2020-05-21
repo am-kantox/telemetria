@@ -7,6 +7,8 @@ defmodule Mix.Tasks.Compile.Telemetria do
   alias Telemetria.Mix.Events
 
   @preferred_cli_env :dev
+  @manifest_events "telemetria_events"
+  @json_config Path.join(["config", ".telemetria.config.json"])
 
   @moduledoc """
   Allows compile-time telemetry events definition.
@@ -41,42 +43,70 @@ defmodule Mix.Tasks.Compile.Telemetria do
     tracers = Code.get_compiler_option(:tracers)
     Code.put_compiler_option(:tracers, [__MODULE__ | tracers])
 
-    {:ok, [diagnostic("hey there")]}
+    {:ok, []}
   end
 
-  @manifest_events "telemetria_events"
-
+  @doc false
   @impl Compiler
   def manifests, do: [manifest_path(@manifest_events)]
 
+  @doc false
   @impl Compiler
   def clean do
+    with {:ok, files} <- File.rm_rf(@json_config),
+         do: Mix.shell().info("Telemetria JSON config cleaned up: #{inspect(files)}")
+
     :ok
   end
 
   @doc false
-  # def trace({remote, _meta, Telemetria, _name, _arity}, _env)
-  def trace({remote, meta, Telemetria, _name, _arity}, env)
+  def trace({remote, meta, Telemetria, name, arity}, env)
       when remote in ~w/remote_macro imported_macro/a do
-    Events.put(:module, {env.module, meta})
+    pos = if Keyword.keyword?(meta), do: Keyword.get(meta, :line, env.line)
+    message = "Added telemetry call through #{remote} {#{name}, #{arity}}"
+
+    Events.put(
+      :diagnostic,
+      diagnostic(message, details: env.context, position: pos, file: env.file)
+    )
+
     :ok
   end
 
   def trace(_event, _env), do: :ok
 
-  defp after_compiler({:error, _} = status, _argv), do: status
+  @spec store_config :: :ok | {:error, :manifest_missing}
+  def store_config, do: @manifest_events |> read_manifest() |> do_store_config()
 
-  defp after_compiler({status, diagnostics}, _argv) when status in [:ok, :noop] do
-    app_name = Keyword.fetch!(Mix.Project.config(), :app)
+  @spec do_store_config(nil | term()) :: :ok | {:error, any()}
+  defp do_store_config(nil), do: {:error, :manifest_missing}
 
-    # We're reloading the app to make sure we have the latest version. This fixes potential stale state in ElixirLS.
-    Application.unload(app_name)
-    Application.load(app_name)
+  defp do_store_config(manifest) do
+    json = Jason.encode!(%{otp_app: app_name(), events: Enum.flat_map(manifest, &elem(&1, 1))})
+
+    File.mkdir_p!(Path.dirname(@json_config))
+    File.write!(@json_config, json)
+  end
+
+  @spec app_name :: atom()
+  defp app_name, do: Keyword.fetch!(Mix.Project.config(), :app)
+
+  @spec after_compiler({status, [Mix.Task.Compiler.Diagnostic.t()]}, any()) ::
+          {status, [Mix.Task.Compiler.Diagnostic.t()]}
+        when status: atom()
+  defp after_compiler({status, diagnostics}, _argv) do
+    # If succeeded, we're reloading the app to make sure we have the latest version.
+    # This fixes potential stale state in ElixirLS.
+    if status in [:ok, :noop] do
+      app_name = app_name()
+      Application.unload(app_name)
+      Application.load(app_name)
+    end
 
     tracers = Enum.reject(Code.get_compiler_option(:tracers), &(&1 == __MODULE__))
     Code.put_compiler_option(:tracers, tracers)
 
-    %{events: events, modules: _modules} = Events.all()
+    %{events: events, diagnostics: telemetria_diagnostics} = Events.all()
 
     [full, added, removed] =
       @manifest_events
@@ -119,10 +149,11 @@ defmodule Mix.Tasks.Compile.Telemetria do
         )
     end
 
-    {status, diagnostics ++ [diagnostic("hey there")]}
+    {status, diagnostics ++ MapSet.to_list(telemetria_diagnostics)}
   end
 
-  defp diagnostic(message, opts \\ []) do
+  @spec diagnostic(message :: binary(), opts :: keyword()) :: Mix.Task.Compiler.Diagnostic.t()
+  defp diagnostic(message, opts) do
     %Mix.Task.Compiler.Diagnostic{
       compiler_name: "telemetria",
       details: nil,
@@ -135,16 +166,12 @@ defmodule Mix.Tasks.Compile.Telemetria do
   end
 
   @spec manifest_path(binary()) :: binary()
-  def manifest_path(name),
+  defp manifest_path(name),
     do: Mix.Project.config() |> Mix.Project.manifest_path() |> Path.join("compile.#{name}")
 
-  @spec stale_manifest?(binary()) :: boolean()
-  def stale_manifest?(name),
-    do: Mix.Utils.stale?([Mix.Project.config_mtime()], [manifest_path(name)])
-
   @spec read_manifest(binary()) :: term()
-  def read_manifest(name) do
-    unless stale_manifest?(name) do
+  defp read_manifest(name) do
+    unless Mix.Utils.stale?([Mix.Project.config_mtime()], [manifest_path(name)]) do
       name
       |> manifest_path()
       |> File.read()
@@ -156,9 +183,11 @@ defmodule Mix.Tasks.Compile.Telemetria do
   end
 
   @spec write_manifest(binary(), term()) :: :ok
-  def write_manifest(name, data) do
+  defp write_manifest(name, data) do
     path = manifest_path(name)
     File.mkdir_p!(Path.dirname(path))
     File.write!(path, :erlang.term_to_binary(data))
+
+    do_store_config(data)
   end
 end
