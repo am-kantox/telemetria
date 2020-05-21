@@ -1,10 +1,10 @@
 defmodule Telemetria do
   @moduledoc """
   `Telemetría` is the opinionated wrapper for [`:telemetry`](https://hexdocs.pm/telemetry)
-  providing handy macroses to attach telemetry events to any function, private function,
+  providing handy macros to attach telemetry events to any function, private function,
   anonymous functions (on per-clause basis) and just random set of expressions.
 
-  `Telemetría` exports three macroses:
+  `Telemetría` exports three macros:
 
   - `deft/2` which is wrapping `Kernel.def/2`
   - `defpt/2` which is wrapping `Kernel.defp/2`
@@ -14,7 +14,7 @@ defmodule Telemetria do
 
   `Telemetría` allows compile-time telemetry events definition and provides
   a compiler that is responsible for incremental builds and updates of the list of
-  events telemetry is sware about.
+  events telemetry is aware about.
 
   ## Advantages
 
