@@ -1,4 +1,8 @@
 defmodule Telemetria do
+  use Boundary,
+    deps: [Telemetria.Instrumenter, Telemetria.Options, Telemetria.Mix.Events],
+    exports: []
+
   @moduledoc """
   `Telemetría` is the opinionated wrapper for [`:telemetry`](https://hexdocs.pm/telemetry)
   providing handy macros to attach telemetry events to any function, private function,
@@ -85,8 +89,6 @@ defmodule Telemetria do
 
   #{NimbleOptions.docs(Telemetria.Options.schema())}
   """
-
-  use Boundary, deps: [Telemetria.Instrumenter, Telemetria.Mix.Events], exports: []
 
   alias Telemetria.Mix.Events
 
