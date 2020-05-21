@@ -1,9 +1,11 @@
 defmodule Telemetria.Mix.Events do
   @moduledoc false
 
+  use Boundary, deps: [], exports: []
+
   use Agent
 
-  def start_link(),
+  def start_link,
     do: Agent.start_link(fn -> %{events: %{}, diagnostics: MapSet.new()} end, name: __MODULE__)
 
   def all, do: Agent.get(__MODULE__, & &1)

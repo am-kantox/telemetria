@@ -1,4 +1,8 @@
 defmodule Telemetria.ConfigProvider do
+  @moduledoc false
+
+  use Boundary, deps: [], exports: []
+
   @behaviour Config.Provider
 
   @impl Config.Provider

@@ -1,7 +1,7 @@
 defmodule Mix.Tasks.Compile.Telemetria do
   # credo:disable-for-this-file Credo.Check.Readability.Specs
 
-  use Boundary, deps: [], exports: []
+  use Boundary, deps: [Telemetria.Mix.Events], exports: []
   use Mix.Task.Compiler
   alias Mix.Task.Compiler
   alias Telemetria.Mix.Events
@@ -136,10 +136,14 @@ defmodule Mix.Tasks.Compile.Telemetria do
         Mix.shell().info("Telemetry events were not updated")
 
       [[], rem] ->
-        Mix.shell().info(Enum.join(["Telemetry events removed:" | rem], "\n  - "))
+        ["Telemetry events removed:" | rem]
+        |> Enum.join("\n  - ")
+        |> Mix.shell().info()
 
       [add, []] ->
-        Mix.shell().info(Enum.join(["Telemetry events added:  " | add], "\n  - "))
+        ["Telemetry events added:  " | add]
+        |> Enum.join("\n  - ")
+        |> Mix.shell().info()
 
       [add, rem] ->
         Mix.shell().info(

@@ -2,7 +2,7 @@ defmodule Telemetria.Instrumenter do
   @moduledoc false
 
   require Logger
-  use Boundary, deps: [], exports: []
+  use Boundary, deps: [Telemetria.ConfigProvider], exports: []
 
   @json_config Telemetria.ConfigProvider.json_config!()
 

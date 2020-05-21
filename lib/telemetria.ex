@@ -3,7 +3,9 @@ defmodule Telemetria do
   Declares helpers to define functions with telemetria attached.
   """
 
-  use Boundary, deps: [Telemetria.Instrumenter], exports: []
+  use Boundary, deps: [Telemetria.Instrumenter, Telemetria.Mix.Events], exports: []
+
+  alias Telemetria.Mix.Events
 
   defmodule Handler do
     @moduledoc "Default handler used unless the custom one is specified in config"
@@ -135,7 +137,7 @@ defmodule Telemetria do
   end
 
   defp report(event, caller) do
-    if is_nil(GenServer.whereis(Telemetria.Mix.Events)) do
+    if is_nil(GenServer.whereis(Events)) do
       Mix.shell().info([
         [:bright, :green, "[INFO] ", :reset],
         "Added event: #{inspect(event)} at ",
@@ -148,7 +150,7 @@ defmodule Telemetria do
         "Add `:telemetria` compiler to `compilers:` in your `mix.exs`!"
       ])
     else
-      Telemetria.Mix.Events.put(:event, {caller.module, event})
+      Events.put(:event, {caller.module, event})
     end
   end
 
