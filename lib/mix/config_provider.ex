@@ -27,8 +27,9 @@ defmodule Telemetria.ConfigProvider do
 
   @spec json_config!(binary() | nil) :: keyword()
   def json_config!(path \\ nil) do
+    path = guess_config_path(path)
+
     path
-    |> guess_config_path()
     |> File.exists?()
     |> if do
       with {:ok, json} <- File.read(path) do
