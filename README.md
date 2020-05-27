@@ -18,5 +18,11 @@ def deps do
 end
 ```
 
+## Changelog
+
+* **`0.3.0`** —
+  * [ENH] no need for any config in any environment
+  * [BUG] proper handling of guards in compiler, correct event names
+
 ## [Documentation](https://hexdocs.pm/telemetria).
 
