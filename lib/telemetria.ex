@@ -49,7 +49,7 @@ defmodule Telemetria do
   ```
 
   In the modules you want to add telemetry to, you should `require Telemetria` (or,
-  preferrably, `import Telemetria` to make it available without FQN.) Once imported,
+  preferably, `import Telemetria` to make it available without FQN.) Once imported,
   the macros are available and tracked by the compiler.
 
   ```elixir
@@ -111,7 +111,7 @@ defmodule Telemetria do
     end
   end
 
-  @doc "Declares a function with a telemetry attached, neasuring execution time"
+  @doc "Declares a function with a telemetry attached, measuring execution time"
   defmacro deft(call, expr) do
     expr = telemetry_wrap(expr, call, __CALLER__)
 
@@ -120,7 +120,7 @@ defmodule Telemetria do
     end
   end
 
-  @doc "Declares a private function with a telemetry attached, neasuring execution time"
+  @doc "Declares a private function with a telemetry attached, measuring execution time"
   defmacro defpt(call, expr) do
     expr = telemetry_wrap(expr, call, __CALLER__)
 
