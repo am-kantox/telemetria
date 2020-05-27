@@ -11,7 +11,6 @@ defmodule Mix.Tasks.Compile.Telemetria do
 
   @preferred_cli_env :dev
   @manifest_events "telemetria_events"
-  @json_config Path.join(["config", ".telemetria.config.json"])
 
   @impl Compiler
   def run(argv) do
@@ -33,7 +32,7 @@ defmodule Mix.Tasks.Compile.Telemetria do
   @doc false
   @impl Compiler
   def clean do
-    with {:ok, files} <- File.rm_rf(@json_config),
+    with {:ok, files} <- File.rm_rf(Events.json_config_path()),
          do: Mix.shell().info("Telemetria JSON config cleaned up: #{inspect(files)}")
 
     :ok
@@ -64,8 +63,8 @@ defmodule Mix.Tasks.Compile.Telemetria do
   defp do_store_config(manifest) do
     json = Jason.encode!(%{otp_app: app_name(), events: Enum.flat_map(manifest, &elem(&1, 1))})
 
-    File.mkdir_p!(Path.dirname(@json_config))
-    File.write!(@json_config, json)
+    File.mkdir_p!(Path.dirname(Events.json_config_path()))
+    File.write!(Events.json_config_path(), json)
   end
 
   @spec app_name :: atom()

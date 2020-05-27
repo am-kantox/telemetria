@@ -23,14 +23,19 @@ defmodule Telemetria.Options do
   @schema [
     otp_app: [
       type: :atom,
-      required: true,
+      default: :telemetria,
       doc: "OTP application this telemetry is attached to."
+    ],
+    json_config_path: [
+      type: :string,
+      default: Path.join(["config", ".telemetria.config.json"]),
+      doc: "Relative path to JSON config"
     ],
     events: [
       type:
         {:custom, Telemetria.Options, :list,
          [[{Telemetria.Options, :list, [[{Kernel, :is_atom, []}]]}]]},
-      required: true,
+      default: [],
       doc: """
       The application-specific events.
 

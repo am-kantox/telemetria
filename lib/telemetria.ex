@@ -92,6 +92,20 @@ defmodule Telemetria do
 
   alias Telemetria.Mix.Events
 
+  defmodule Application do
+    @moduledoc false
+
+    use Elixir.Application
+
+    @impl Elixir.Application
+    def start(_type, _args) do
+      Telemetria.Instrumenter.setup()
+
+      opts = [strategy: :one_for_one, name: Telemetria]
+      Supervisor.start_link([], opts)
+    end
+  end
+
   defmodule Handler do
     @moduledoc """
     Default handler used unless the custom one is specified in config.
@@ -193,8 +207,6 @@ defmodule Telemetria do
   end
 
   defp telemetry_wrap(expr, call, %Macro.Env{} = caller, context) do
-    IO.inspect({expr, call}, label: "★★★")
-
     {block, expr} =
       if Keyword.keyword?(expr) do
         Keyword.pop(expr, :do, [])

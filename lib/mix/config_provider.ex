@@ -3,6 +3,8 @@ defmodule Telemetria.ConfigProvider do
 
   use Boundary, deps: [], exports: []
 
+  alias Telemetria.Mix.Events
+
   @behaviour Config.Provider
 
   @impl Config.Provider
@@ -23,9 +25,10 @@ defmodule Telemetria.ConfigProvider do
     )
   end
 
-  @spec json_config!(binary()) :: keyword()
-  def json_config!(path \\ Path.join(["config", ".telemetria.config.json"])) do
+  @spec json_config!(binary() | nil) :: keyword()
+  def json_config!(path \\ nil) do
     path
+    |> guess_config_path()
     |> File.exists?()
     |> if do
       with {:ok, json} <- File.read(path) do
@@ -37,6 +40,9 @@ defmodule Telemetria.ConfigProvider do
     end
     |> Kernel.||([])
   end
+
+  defp guess_config_path(path) when is_binary(path), do: path
+  defp guess_config_path(_), do: Events.json_config_path()
 
   defp maybe_atomize(v) when is_binary(v), do: String.to_atom(v)
   defp maybe_atomize({k, v}), do: {maybe_atomize(k), maybe_atomize(v)}

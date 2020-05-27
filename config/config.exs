@@ -1,7 +1,12 @@
 import Config
 
 config :telemetria,
-  otp_app: :telemetria,
-  events: []
-
-if File.exists?("config/#{Mix.env()}.exs"), do: import_config("#{Mix.env()}.exs")
+  events: [
+    [:test, :telemetria, :example, :twice],
+    [:test, :telemetria, :example, :sum_with_doubled],
+    [:test, :telemetria, :example, :half],
+    [:test, :telemetria, :example, :half_named, :foo],
+    [:test, :telemetria, :example, :tmed],
+    [:test, :telemetria, :example, :tmed_do],
+    [:test, :telemetria, :example, :guarded]
+  ]

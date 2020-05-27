@@ -4,20 +4,30 @@ defmodule Telemetria.Instrumenter do
   require Logger
   use Boundary, deps: [Telemetria.ConfigProvider], exports: []
 
-  @json_config Telemetria.ConfigProvider.json_config!()
+  @spec json_config :: keyword()
+  def json_config, do: Telemetria.ConfigProvider.json_config!()
 
-  @otp_app Application.get_env(:telemetria, :otp_app, [])
   @spec otp_app :: binary()
-  def otp_app, do: to_string(Keyword.get(@json_config, :otp_app, @otp_app))
+  def otp_app,
+    do:
+      Keyword.get(
+        json_config(),
+        :otp_app,
+        Application.get_env(:telemetria, :otp_app, :telemetria)
+      )
 
-  @events Application.fetch_env!(:telemetria, :events)
   @spec events :: [[atom()]]
-  def events, do: Enum.to_list(MapSet.new(Keyword.get(@json_config, :events, []) ++ @events))
+  def events,
+    do:
+      Enum.to_list(
+        MapSet.new(
+          Keyword.get(json_config(), :events, []) ++ Application.get_env(:telemetria, :events, [])
+        )
+      )
 
-  def setup do
-    Application.stop(:telemetry)
-    Application.start(:telemetry)
-    :telemetry.attach_many(otp_app(), events(), &handle_event/4, nil)
+  def setup() do
+    Application.ensure_all_started(:telemetry)
+    :telemetry.attach_many(Atom.to_string(otp_app()), events(), &handle_event/4, nil)
   end
 
   def handle_event(event, measurements, context, config) do

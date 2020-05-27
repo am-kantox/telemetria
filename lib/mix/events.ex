@@ -1,6 +1,12 @@
 defmodule Telemetria.Mix.Events do
   @moduledoc false
 
+  @json_config_path Application.get_env(
+                      :telemetry,
+                      :json_config_path,
+                      Path.join(["config", ".telemetria.config.json"])
+                    )
+
   use Boundary, deps: [], exports: []
 
   use Agent
@@ -26,4 +32,9 @@ defmodule Telemetria.Mix.Events do
         __MODULE__,
         &Map.update!(&1, :diagnostics, fn diagnostics -> MapSet.put(diagnostics, diagnostic) end)
       )
+
+  @doc false
+  @spec json_config_path :: binary()
+  {:compile, inline: [json_config_path: 0]}
+  def json_config_path, do: @json_config_path
 end

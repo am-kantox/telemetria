@@ -31,8 +31,9 @@ defmodule Telemetria.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      applications: [:logger],
-      registered: [Telemetria]
+      applications: [:logger, :telemetry],
+      mod: {Telemetria.Application, []},
+      registered: [Telemetria, Telemetria.Application, Telemetria.Instrumenter]
     ]
   end
 
