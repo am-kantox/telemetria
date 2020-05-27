@@ -7,5 +7,6 @@ config :telemetria,
     [:test, :telemetria, :example, :half],
     [:test, :telemetria, :example, :half_named, :foo],
     [:test, :telemetria, :example, :tmed],
-    [:test, :telemetria, :example, :tmed_do]
+    [:test, :telemetria, :example, :tmed_do],
+    [:test, :telemetria, :example, :guarded]
   ]

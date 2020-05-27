@@ -186,7 +186,15 @@ defmodule Telemetria do
 
   @spec telemetry_wrap(ast, maybe_improper_list(), Macro.Env.t(), keyword()) :: ast
         when ast: keyword() | {atom(), keyword(), tuple() | list()}
-  defp telemetry_wrap(expr, call, %Macro.Env{} = caller, context \\ []) do
+  defp telemetry_wrap(expr, call, caller, context \\ [])
+
+  defp telemetry_wrap(expr, {:when, _meta, [call, _guards]}, %Macro.Env{} = caller, context) do
+    telemetry_wrap(expr, call, caller, context)
+  end
+
+  defp telemetry_wrap(expr, call, %Macro.Env{} = caller, context) do
+    IO.inspect({expr, call}, label: "★★★")
+
     {block, expr} =
       if Keyword.keyword?(expr) do
         Keyword.pop(expr, :do, [])

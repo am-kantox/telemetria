@@ -55,4 +55,15 @@ defmodule Telemetria.Test do
 
     assert log =~ "[:test, :telemetria, :example, :tmed_do]"
   end
+
+  test "attaches telemetry events to guarded function and spits out logs" do
+    log =
+      capture_log(fn ->
+        assert 84 == Example.guarded(42)
+        assert :ok == Example.guarded(:ok)
+        Process.sleep(100)
+      end)
+
+    assert log =~ "[:test, :telemetria, :example, :guarded]"
+  end
 end

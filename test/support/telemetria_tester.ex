@@ -37,4 +37,12 @@ defmodule Test.Telemetria.Example do
       84 / 2
     end
   end
+
+  deft guarded(a) when is_integer(a) and a > 0 do
+    a + a
+  end
+
+  deft guarded(a) do
+    a
+  end
 end
