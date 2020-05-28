@@ -118,6 +118,12 @@ defmodule Telemetria do
     use Boundary, deps: [], exports: []
 
     @doc false
+    @spec handle_event(
+            :telemetry.event_name(),
+            :telemetry.event_measurements(),
+            :telemetry.event_metadata(),
+            :telemetry.handler_config()
+          ) :: :ok
     def handle_event(event, measurements, metadata, config) do
       [event: event, measurements: measurements, metadata: metadata, config: config]
       |> inspect()

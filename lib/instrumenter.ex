@@ -7,7 +7,7 @@ defmodule Telemetria.Instrumenter do
   @spec json_config :: keyword()
   def json_config, do: Telemetria.ConfigProvider.json_config!()
 
-  @spec otp_app :: binary()
+  @spec otp_app :: atom()
   def otp_app,
     do:
       Keyword.get(
@@ -25,11 +25,18 @@ defmodule Telemetria.Instrumenter do
         )
       )
 
-  def setup() do
+  @spec setup :: :ok | {:error, :already_exists}
+  def setup do
     Application.ensure_all_started(:telemetry)
     :telemetry.attach_many(Atom.to_string(otp_app()), events(), &handle_event/4, nil)
   end
 
+  @spec handle_event(
+          :telemetry.event_name(),
+          :telemetry.event_measurements(),
+          :telemetry.event_metadata(),
+          :telemetry.handler_config()
+        ) :: any()
   def handle_event(event, measurements, context, config) do
     {m, f, 4} = Application.get_env(:telemetria, :handler, {Telemetria.Handler, :handle_event, 4})
     apply(m, f, [event, measurements, context, config])
