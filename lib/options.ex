@@ -20,11 +20,24 @@ defmodule Telemetria.Options do
     )
   end
 
+  @spec mf(mf_tuple) :: {:ok, mf_tuple} | {:error, binary()} when mf_tuple: {module(), atom()}
+  def mf({mod, fun}) do
+    if match?({:module, ^mod}, Code.ensure_compiled(mod)) && mod.__info__(:functions)[fun] == 4,
+      do: {:ok, {mod, fun}},
+      else:
+        {:error, "Expected MF pair returning a function of arity 4, got #{inspect({mod, fun})}."}
+  end
+
   @schema [
     otp_app: [
       type: :atom,
       default: :telemetria,
       doc: "OTP application this telemetry is attached to."
+    ],
+    enabled: [
+      type: :boolean,
+      doc: "Specifies whether telemetry should be enabled.",
+      default: true
     ],
     json_config_path: [
       type: :string,
@@ -43,15 +56,40 @@ defmodule Telemetria.Options do
       """
     ],
     handler: [
-      type: :mfa,
-      default: {Telemetria.Handler, :handle_event, 4},
+      type: {:custom, Telemetria.Options, :mf, []},
+      default: {Telemetria.Handler, :handle_event},
       doc: "Event handler for this application’s telemetry events. Arity must be 4."
+    ],
+    polling: [
+      type: :keyword_list,
+      default: [enabled: true, flush: 5_000, poll: 5_000],
+      keys: [
+        enabled: [
+          type: :boolean,
+          doc: "Specifies whether polling should be enabled.",
+          default: true
+        ],
+        flush: [
+          type: :non_neg_integer,
+          doc: "Flush interval.",
+          default: 5_000
+        ],
+        poll: [
+          type: :non_neg_integer,
+          doc: "Poll interval.",
+          default: 5_000
+        ]
+      ]
     ]
   ]
 
   @doc false
   @spec schema :: NimbleOptions.schema()
   def schema, do: @schema
+
+  @spec initial :: keyword()
+  def initial,
+    do: NimbleOptions.validate!(Application.get_all_env(:telemetria), Telemetria.Options.schema())
 end
 
 NimbleOptions.validate!(Application.get_all_env(:telemetria), Telemetria.Options.schema())
