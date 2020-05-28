@@ -20,6 +20,9 @@ end
 
 ## Changelog
 
+* **`0.4.0`** —
+  * [ENH] default polling of system / vm states for free
+  * [ENH] starting in phases ensuring proper instrumenter setup
 * **`0.3.0`** —
   * [ENH] no need for any config in any environment
   * [BUG] proper handling of guards in compiler, correct event names
