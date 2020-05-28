@@ -33,6 +33,7 @@ defmodule Telemetria.MixProject do
     [
       applications: [:logger, :telemetry],
       mod: {Telemetria.Application, []},
+      start_phases: [{:telemetry_setup, []}],
       registered: [Telemetria, Telemetria.Application, Telemetria.Instrumenter]
     ]
   end
@@ -41,6 +42,7 @@ defmodule Telemetria.MixProject do
     [
       {:boundary, "~> 0.4", runtime: false},
       {:telemetry, "~> 0.4"},
+      {:telemetry_poller, "~> 0.5"},
       {:jason, "~> 1.0"},
       {:nimble_options, "~> 0.2"},
       # dev / test
