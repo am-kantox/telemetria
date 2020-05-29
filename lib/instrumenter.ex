@@ -1,8 +1,13 @@
 defmodule Telemetria.Instrumenter do
   @moduledoc false
 
+  alias Telemetria.{ConfigProvider, Handler}
+
+  use Boundary, deps: [ConfigProvider], exports: []
+
   require Logger
-  use Boundary, deps: [Telemetria.ConfigProvider], exports: []
+
+  @behaviour Handler
 
   @spec setup :: :ok | {:error, :already_exists}
   def setup do
@@ -15,7 +20,7 @@ defmodule Telemetria.Instrumenter do
   end
 
   @spec json_config :: keyword()
-  def json_config, do: Telemetria.ConfigProvider.json_config!()
+  def json_config, do: ConfigProvider.json_config!()
 
   @spec otp_app :: atom()
   def otp_app,
@@ -46,14 +51,11 @@ defmodule Telemetria.Instrumenter do
   @doc false
   def buffer, do: Process.whereis(Telemetria.Buffer)
 
-  @spec handle_event(
-          :telemetry.event_name(),
-          :telemetry.event_measurements(),
-          :telemetry.event_metadata(),
-          :telemetry.handler_config()
-        ) :: any()
+  @impl Telemetria.Handler
   def handle_event(event, measurements, context, config) do
-    {m, f} = Application.get_env(:telemetria, :handler, {Telemetria.Handler, :handle_event})
+    {m, f} =
+      Application.get_env(:telemetria, :handler, {Telemetria.Handler.Default, :handle_event})
+
     apply(m, f, [event, measurements, context, config])
   end
 

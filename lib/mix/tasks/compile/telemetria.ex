@@ -64,7 +64,7 @@ defmodule Mix.Tasks.Compile.Telemetria do
     json = Jason.encode!(%{otp_app: app_name(), events: Enum.flat_map(manifest, &elem(&1, 1))})
 
     File.mkdir_p!(Path.dirname(Events.json_config_path()))
-    File.write!(Events.json_config_path(), json)
+    File.write(Events.json_config_path(), json)
   end
 
   @spec app_name :: atom()

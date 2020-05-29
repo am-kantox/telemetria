@@ -5,7 +5,7 @@ defmodule Test.Telemetria.Example do
 
   use Boundary, deps: [Telemetria], exports: []
 
-  import Telemetria
+  use Telemetria, action: :import
 
   defpt twice(a) do
     a * 2
@@ -30,6 +30,11 @@ defmodule Test.Telemetria.Example do
     t(&(&1 / 2), suffix: :foo).(a)
   end
 
+  @telemetria true
+  def annotated_1(foo), do: annotated_2(foo)
+  @telemetria true
+  def annotated_1(foo, bar), do: if(is_nil(bar), do: annotated_2(foo))
+
   def tmed, do: t(21 + 21)
 
   def tmed_do do
@@ -37,6 +42,13 @@ defmodule Test.Telemetria.Example do
       84 / 2
     end
   end
+
+  defp annotated_2(i \\ nil)
+
+  @telemetria true
+  defp annotated_2(i) when (is_integer(i) and i == 42) or is_nil(i), do: i || 42
+  @telemetria true
+  defp annotated_2(_i), do: :foo
 
   deft guarded(a) when is_integer(a) and a > 0 do
     a + a
