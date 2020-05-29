@@ -57,12 +57,12 @@ defmodule Telemetria.Options do
     ],
     handler: [
       type: {:custom, Telemetria.Options, :mf, []},
-      default: {Telemetria.Handler, :handle_event},
+      default: {Telemetria.Handler.Default, :handle_event},
       doc: "Event handler for this application’s telemetry events. Arity must be 4."
     ],
     polling: [
       type: :keyword_list,
-      default: [enabled: true, flush: 5_000, poll: 5_000],
+      default: [enabled: false, flush: 5_000, poll: 5_000],
       keys: [
         enabled: [
           type: :boolean,

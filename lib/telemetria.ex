@@ -1,7 +1,7 @@
 defmodule Telemetria do
   use Boundary,
     deps: [Telemetria.Instrumenter, Telemetria.Options, Telemetria.Mix.Events],
-    exports: []
+    exports: [Hooks]
 
   @moduledoc """
   `Telemetría` is the opinionated wrapper for [`:telemetry`](https://hexdocs.pm/telemetry)
@@ -92,56 +92,23 @@ defmodule Telemetria do
 
   alias Telemetria.Mix.Events
 
-  defmodule Application do
-    @moduledoc false
+  @doc false
+  defmacro __using__(opts) do
+    initial_ast =
+      case Keyword.get(opts, :action, :none) do
+        :require -> quote(do: require(Telemetria))
+        :import -> quote(do: import(Telemetria))
+        :none -> :ok
+        unknown -> IO.puts("Ignored unknown value for :action option: " <> inspect(unknown))
+      end
 
-    use Elixir.Application
+    quote do
+      unquote(initial_ast)
+      Module.register_attribute(__MODULE__, :telemetria, accumulate: false)
+      Module.register_attribute(__MODULE__, :telemetria_hooks, accumulate: true)
 
-    @impl Elixir.Application
-    def start(_type, _args) do
-      Application.ensure_all_started(:telemetry)
-      Application.put_all_env(telemetria: Telemetria.Options.initial())
-
-      opts = [strategy: :rest_for_one, name: Telemetria]
-
-      children = [
-        %{
-          id: Telemetria.Buffer,
-          start: {GenServer, :start_link, [StringIO, {"", []}, [name: Telemetria.Buffer]]}
-        },
-        {Telemetria.Polling, Application.get_env(:telemetria, :polling, [])}
-      ]
-
-      Supervisor.start_link(children, opts)
-    end
-
-    @impl Application
-    def start_phase(:telemetry_setup, _start_type, []),
-      do: Telemetria.Instrumenter.setup()
-  end
-
-  defmodule Handler do
-    @moduledoc """
-    Default handler used unless the custom one is specified in config.
-
-    This handler collects `event`, `measurements`, `metadata`, and `config`,
-    packs them into the keyword list and logs on `:info` log level.
-    """
-
-    require Logger
-    use Boundary, deps: [], exports: []
-
-    @doc false
-    @spec handle_event(
-            :telemetry.event_name(),
-            :telemetry.event_measurements(),
-            :telemetry.event_metadata(),
-            :telemetry.handler_config()
-          ) :: :ok
-    def handle_event(event, measurements, metadata, config) do
-      [event: event, measurements: measurements, metadata: metadata, config: config]
-      |> inspect()
-      |> Logger.info()
+      @on_definition Telemetria.Hooks
+      @before_compile Telemetria.Hooks
     end
   end
 
@@ -218,15 +185,15 @@ defmodule Telemetria do
     prefix ++ suffix
   end
 
-  @spec telemetry_wrap(ast, maybe_improper_list(), Macro.Env.t(), keyword()) :: ast
-        when ast: keyword() | {atom(), keyword(), tuple() | list()}
-  defp telemetry_wrap(expr, call, caller, context \\ [])
+  @spec telemetry_wrap(ast, nil | maybe_improper_list(), Macro.Env.t(), keyword()) :: ast
+        when ast: keyword() | {atom(), keyword(), any()}
+  def telemetry_wrap(expr, call, caller, context \\ [])
 
-  defp telemetry_wrap(expr, {:when, _meta, [call, _guards]}, %Macro.Env{} = caller, context) do
+  def telemetry_wrap(expr, {:when, _meta, [call, _guards]}, %Macro.Env{} = caller, context) do
     telemetry_wrap(expr, call, caller, context)
   end
 
-  defp telemetry_wrap(expr, call, %Macro.Env{} = caller, context) do
+  def telemetry_wrap(expr, call, %Macro.Env{} = caller, context) do
     {block, expr} =
       if Keyword.keyword?(expr) do
         Keyword.pop(expr, :do, [])
