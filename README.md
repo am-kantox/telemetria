@@ -20,6 +20,9 @@ end
 
 ## Changelog
 
+* **`0.5.0`** —
+  * [ENH] annotation `@telemetry true` as a synonym to `deft/2`
+  * [FIX] polling is off by default
 * **`0.4.0`** —
   * [ENH] default polling of system / vm states for free
   * [ENH] starting in phases ensuring proper instrumenter setup
