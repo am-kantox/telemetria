@@ -145,15 +145,24 @@ defmodule Telemetria do
 
   defmacro t(ast, opts), do: do_t(ast, opts, __CALLER__)
 
+  @compile {:inline, enabled?: 0, enabled?: 1}
+  @spec enabled?(opts :: keyword()) :: boolean()
+  defp enabled?(opts \\ []),
+    do: Keyword.get(opts, :enabled, Application.get_env(:telemetria, :enabled, true))
+
   @compile {:inline, do_t: 3}
   @spec do_t(ast, keyword(), Macro.Env.t()) :: ast
         when ast: {atom(), keyword(), tuple() | list()}
   defp do_t(ast, opts, caller) do
-    {suffix, opts} = Keyword.pop(opts, :suffix)
+    if enabled?(opts) do
+      {suffix, opts} = Keyword.pop(opts, :suffix)
 
-    ast
-    |> telemetry_wrap(List.wrap(suffix), caller, opts)
-    |> Keyword.get(:do, [])
+      ast
+      |> telemetry_wrap(List.wrap(suffix), caller, opts)
+      |> Keyword.get(:do, [])
+    else
+      ast
+    end
   end
 
   @compile {:inline, telemetry_prefix: 2}
@@ -194,49 +203,53 @@ defmodule Telemetria do
   end
 
   def telemetry_wrap(expr, call, %Macro.Env{} = caller, context) do
-    {block, expr} =
-      if Keyword.keyword?(expr) do
-        Keyword.pop(expr, :do, [])
-      else
-        {expr, []}
-      end
+    if enabled?() do
+      {block, expr} =
+        if Keyword.keyword?(expr) do
+          Keyword.pop(expr, :do, [])
+        else
+          {expr, []}
+        end
 
-    event = telemetry_prefix(caller, call)
+      event = telemetry_prefix(caller, call)
 
-    report(event, caller)
+      report(event, caller)
 
-    unless is_nil(caller.module),
-      do: Module.put_attribute(caller.module, :doc, {caller.line, telemetry: true})
+      unless is_nil(caller.module),
+        do: Module.put_attribute(caller.module, :doc, {caller.line, telemetry: true})
 
-    caller = Macro.escape(Map.take(caller, ~w|file line|a))
+      caller = Macro.escape(Map.take(caller, ~w|file line|a))
 
-    block =
-      quote do
-        reference = inspect(make_ref())
+      block =
+        quote do
+          reference = inspect(make_ref())
 
-        now = [
-          system: System.system_time(),
-          monotonic: System.monotonic_time(:microsecond),
-          utc: DateTime.utc_now()
-        ]
+          now = [
+            system: System.system_time(),
+            monotonic: System.monotonic_time(:microsecond),
+            utc: DateTime.utc_now()
+          ]
 
-        result = unquote(block)
-        benchmark = System.monotonic_time(:microsecond) - now[:monotonic]
+          result = unquote(block)
+          benchmark = System.monotonic_time(:microsecond) - now[:monotonic]
 
-        :telemetry.execute(
-          unquote(event),
-          %{
-            reference: reference,
-            system_time: now,
-            consumed: benchmark
-          },
-          %{env: unquote(caller), result: result, context: unquote(context)}
-        )
+          :telemetry.execute(
+            unquote(event),
+            %{
+              reference: reference,
+              system_time: now,
+              consumed: benchmark
+            },
+            %{env: unquote(caller), result: result, context: unquote(context)}
+          )
 
-        result
-      end
+          result
+        end
 
-    Keyword.put(expr, :do, block)
+      Keyword.put(expr, :do, block)
+    else
+      expr
+    end
   end
 
   defp report(event, caller) do
