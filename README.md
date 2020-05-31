@@ -20,6 +20,9 @@ end
 
 ## Changelog
 
+* **`0.5.1`** —
+  * [ENH] add result of underlying call to metric
+  * [ENH] decrease an amount of garbage returned from caller context
 * **`0.5.0`** —
   * [ENH] annotation `@telemetria true` as a synonym to `deft/2`
   * [FIX] polling is off by default
