@@ -20,6 +20,8 @@ end
 
 ## Changelog
 
+* **`0.5.2`** —
+  * [ENH] `enabled: false` config to purge all telemetria code at once
 * **`0.5.1`** —
   * [ENH] add result of underlying call to metric
   * [ENH] decrease an amount of garbage returned from caller context
