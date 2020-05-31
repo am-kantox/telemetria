@@ -208,7 +208,7 @@ defmodule Telemetria do
     unless is_nil(caller.module),
       do: Module.put_attribute(caller.module, :doc, {caller.line, telemetry: true})
 
-    caller = Macro.escape(caller)
+    caller = Macro.escape(Map.take(caller, ~w|file line|a))
 
     block =
       quote do
@@ -230,7 +230,7 @@ defmodule Telemetria do
             system_time: now,
             consumed: benchmark
           },
-          %{env: unquote(caller), context: unquote(context)}
+          %{env: unquote(caller), result: result, context: unquote(context)}
         )
 
         result

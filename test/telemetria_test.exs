@@ -13,6 +13,7 @@ defmodule Telemetria.Test do
 
     assert log =~ "[:test, :telemetria, :example, :twice]"
     assert log =~ "[:test, :telemetria, :example, :sum_with_doubled]"
+    assert log =~ "result: 7"
   end
 
   test "attaches telemetry events to anonymous local functions and spits out logs" do
@@ -24,6 +25,7 @@ defmodule Telemetria.Test do
 
     assert log =~ "[:test, :telemetria, :example, :half]"
     assert log =~ "arguments: [a: 42]"
+    assert log =~ "result: 21"
   end
 
   test "attaches telemetry events named and spits out logs" do
@@ -34,6 +36,7 @@ defmodule Telemetria.Test do
       end)
 
     assert log =~ "[:test, :telemetria, :example, :half_named, :foo]"
+    assert log =~ "result: #Function<"
   end
 
   test "attaches telemetry events to random ast and spits out logs" do
@@ -44,6 +47,7 @@ defmodule Telemetria.Test do
       end)
 
     assert log =~ "[:test, :telemetria, :example, :tmed]"
+    assert log =~ "result: 42"
   end
 
   test "attaches telemetry events to random ast with do-end syntax and spits out logs" do
@@ -54,6 +58,7 @@ defmodule Telemetria.Test do
       end)
 
     assert log =~ "[:test, :telemetria, :example, :tmed_do]"
+    assert log =~ "result: 42"
   end
 
   test "attaches telemetry events to guarded function and spits out logs" do
@@ -65,6 +70,8 @@ defmodule Telemetria.Test do
       end)
 
     assert log =~ "[:test, :telemetria, :example, :guarded]"
+    assert log =~ "result: 84"
+    assert log =~ "result: :ok"
   end
 
   test "@telemetry true" do
@@ -76,5 +83,6 @@ defmodule Telemetria.Test do
 
     assert log =~ "[:test, :telemetria, :example, :annotated_1]"
     assert log =~ "[:test, :telemetria, :example, :annotated_2]"
+    assert log =~ "result: 42"
   end
 end
