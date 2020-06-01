@@ -20,6 +20,9 @@ end
 
 ## Changelog
 
+* **`0.6.0`** —
+  * [ENH] accept parameters in annotation `@telemetria`
+  * [MIN] better print of events added
 * **`0.5.2`** —
   * [ENH] `enabled: false` config to purge all telemetria code at once
 * **`0.5.1`** —
