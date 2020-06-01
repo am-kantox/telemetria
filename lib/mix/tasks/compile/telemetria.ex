@@ -92,7 +92,7 @@ defmodule Mix.Tasks.Compile.Telemetria do
       |> read_manifest()
       |> case do
         nil ->
-          [events, events, %{}]
+          [events, MapSet.new(Enum.flat_map(events, fn {_, e} -> e end)), MapSet.new()]
 
         old ->
           {related, rest} = Map.split(old, Map.keys(events))

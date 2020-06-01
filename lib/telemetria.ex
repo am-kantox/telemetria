@@ -194,7 +194,7 @@ defmodule Telemetria do
     prefix ++ suffix
   end
 
-  @spec telemetry_wrap(ast, nil | maybe_improper_list(), Macro.Env.t(), keyword()) :: ast
+  @spec telemetry_wrap(ast, nil | maybe_improper_list(), Macro.Env.t(), [Hooks.option()]) :: ast
         when ast: keyword() | {atom(), keyword(), any()}
   def telemetry_wrap(expr, call, caller, context \\ [])
 
@@ -218,7 +218,7 @@ defmodule Telemetria do
       unless is_nil(caller.module),
         do: Module.put_attribute(caller.module, :doc, {caller.line, telemetry: true})
 
-      caller = Macro.escape(Map.take(caller, ~w|file line|a))
+      caller = caller |> Map.take(~w|file line|a) |> Macro.escape()
 
       block =
         quote do
