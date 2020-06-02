@@ -20,6 +20,8 @@ end
 
 ## Changelog
 
+* **`0.6.1`** —
+  * [BUG] wrong order using telemetry with many clauses
 * **`0.6.0`** —
   * [ENH] accept parameters in annotation `@telemetria`
   * [MIN] better print of events added
