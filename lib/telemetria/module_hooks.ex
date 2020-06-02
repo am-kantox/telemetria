@@ -73,18 +73,27 @@ defmodule Telemetria.Hooks do
   end
 
   defmacro __before_compile__(env) do
-    env.module
-    |> Module.get_attribute(:telemetria_hooks)
-    |> Enum.flat_map(fn info ->
-      meta = info.env
-      head = maybe_guarded(info.guards, info.fun, [file: meta.file, line: meta.line], info.args)
-      body = Telemetria.telemetry_wrap(info.body, nil, meta, info.options)
+    hooks =
+      env.module
+      |> Module.get_attribute(:telemetria_hooks)
+      |> Enum.reverse()
 
-      [
-        {:defoverridable, [context: Elixir, import: Kernel], [[{info.fun, length(info.args)}]]},
+    overrides =
+      hooks
+      |> Enum.map(&{&1.fun, length(&1.args)})
+      |> Enum.uniq()
+
+    clauses =
+      hooks
+      |> Enum.map(fn info ->
+        meta = info.env
+        head = maybe_guarded(info.guards, info.fun, [file: meta.file, line: meta.line], info.args)
+        body = Telemetria.telemetry_wrap(info.body, nil, meta, info.options)
+
         {info.kind, [context: Elixir, import: Kernel], [head, body]}
-      ]
-    end)
+      end)
+
+    [{:defoverridable, [context: Elixir, import: Kernel], [overrides]} | clauses]
   end
 
   @spec maybe_guarded([ast_tuple()], atom(), keyword(), [ast_tuple()]) :: ast_tuple()

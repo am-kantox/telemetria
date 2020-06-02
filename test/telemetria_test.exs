@@ -97,4 +97,16 @@ defmodule Telemetria.Test do
     assert log =~ "[warn]  [event: [:test, :telemetria, :example, :annotated_2]"
     assert log =~ "result: 42"
   end
+
+  test "deep pattern match, @telemetry" do
+    log =
+      capture_log(fn ->
+        assert {:ok, :bar} = Example.check_s(%Test.Telemetria.S{foo: :not_42})
+        assert {:error, _} = Example.check_s(%Test.Telemetria.S{foo: :not_42, bar: :not_baz})
+        assert {:ok, :foo} == Example.check_s(%Test.Telemetria.S{})
+        Process.sleep(100)
+      end)
+
+    assert log =~ "[info]  [event: [:test, :telemetria, :example, :check_s]"
+  end
 end

@@ -1,5 +1,10 @@
 Application.ensure_started(:telemetry)
 
+defmodule Test.Telemetria.S do
+  use Boundary
+  defstruct(foo: 42, bar: :baz)
+end
+
 defmodule Test.Telemetria.Example do
   @moduledoc false
 
@@ -57,4 +62,11 @@ defmodule Test.Telemetria.Example do
   deft guarded(a) do
     a
   end
+
+  @telemetria true
+  def check_s(%Test.Telemetria.S{foo: 42}), do: {:ok, :foo}
+  @telemetria true
+  def check_s(%Test.Telemetria.S{bar: :baz}), do: {:ok, :bar}
+  @telemetria true
+  def check_s(any), do: {:error, any}
 end
