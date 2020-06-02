@@ -194,7 +194,9 @@ defmodule Telemetria do
     prefix ++ suffix
   end
 
-  @spec telemetry_wrap(ast, nil | maybe_improper_list(), Macro.Env.t(), [Hooks.option()]) :: ast
+  @spec telemetry_wrap(ast, nil | maybe_improper_list(), Macro.Env.t(), [
+          Telemetria.Hooks.option()
+        ]) :: ast
         when ast: keyword() | {atom(), keyword(), any()}
   def telemetry_wrap(expr, call, caller, context \\ [])
 
