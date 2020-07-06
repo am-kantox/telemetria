@@ -17,13 +17,11 @@ defmodule Telemetria.Handler.Default do
   @impl Handler
   def handle_event(event, measurements, metadata, config) do
     {inspect_opts, metadata} = Map.pop(metadata, :inspect, [])
-    {level, metadata} = pop_in(metadata, [:context, :level])
     {result, metadata} = Map.pop(metadata, :result, :unknown)
+    {options, metadata} = pop_in(metadata, [:context, :options])
 
-    level =
-      if is_nil(level),
-        do: Application.get_env(:telemetria, :level, :info),
-        else: level
+    options = options || []
+    level = Keyword.get(options, :level, Application.get_env(:telemetria, :level, :info))
 
     inspected =
       inspect(
