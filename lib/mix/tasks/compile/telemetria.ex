@@ -126,9 +126,9 @@ defmodule Mix.Tasks.Compile.Telemetria do
 
       [add, rem] ->
         Mix.shell().info(
-          "Telemetry events:\n" <>
-            Enum.join(["  - added:" | add], "\n    - ") <>
-            Enum.join(["  - removed:" | rem], "\n    - ")
+          "Telemetry events:" <>
+            Enum.join(["\n  - added:" | add], "\n    - ") <>
+            Enum.join(["\n  - removed:" | rem], "\n    - ")
         )
     end
 

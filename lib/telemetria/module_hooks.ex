@@ -88,7 +88,11 @@ defmodule Telemetria.Hooks do
       |> Enum.map(fn info ->
         meta = info.env
         head = maybe_guarded(info.guards, info.fun, [file: meta.file, line: meta.line], info.args)
-        body = Telemetria.telemetry_wrap(info.body, nil, meta, info.options)
+
+        body =
+          Telemetria.telemetry_wrap(info.body, {info.fun, [line: meta.line], info.args}, meta,
+            options: info.options
+          )
 
         {info.kind, [context: Elixir, import: Kernel], [head, body]}
       end)

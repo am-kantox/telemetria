@@ -191,10 +191,10 @@ defmodule Telemetria do
           mod |> Module.split() |> Enum.map(&(&1 |> Macro.underscore() |> String.to_atom()))
       end
 
-    prefix ++ suffix
+    Enum.dedup(prefix ++ suffix)
   end
 
-  @spec telemetry_wrap(ast, nil | maybe_improper_list(), Macro.Env.t(), [
+  @spec telemetry_wrap(ast, nil | ast | maybe_improper_list(), Macro.Env.t(), [
           Telemetria.Hooks.option()
         ]) :: ast
         when ast: keyword() | {atom(), keyword(), any()}
@@ -205,6 +205,16 @@ defmodule Telemetria do
   end
 
   def telemetry_wrap(expr, call, %Macro.Env{} = caller, context) do
+    args =
+      case call do
+        {fun, meta, args} when is_atom(fun) and is_list(meta) and is_list(args) -> args
+        _ -> []
+      end
+      |> Enum.reject(&match?({:_, _, _}, &1))
+      |> Enum.map(fn {name, _, _} = var -> {name, var} end)
+
+    context = Keyword.put(context, :args, args)
+
     if enabled?() do
       {block, expr} =
         if Keyword.keyword?(expr) do
