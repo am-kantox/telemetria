@@ -20,6 +20,8 @@ end
 
 ## Changelog
 
+* **`0.7.0`** —
+  * [ENH] add named arguments in all calls to event’s context
 * **`0.6.1`** —
   * [BUG] wrong order using telemetry with many clauses
 * **`0.6.0`** —
