@@ -20,6 +20,8 @@ end
 
 ## Changelog
 
+* **`0.8.0`** —
+  * [ENH] add `applications` option accepting a keyword list of applications to enable `telemetria` for (with optional parameters)
 * **`0.7.0`** —
   * [ENH] add named arguments in all calls to event’s context
 * **`0.6.1`** —

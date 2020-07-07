@@ -210,7 +210,10 @@ defmodule Telemetria do
         {fun, meta, args} when is_atom(fun) and is_list(meta) and is_list(args) -> args
         _ -> []
       end
-      |> Enum.reject(&match?({:_, _, _}, &1))
+      |> Enum.filter(fn
+        {name, _, _} when is_atom(name) -> not match?(<<?_, _::binary>>, Atom.to_string(name))
+        _ -> false
+      end)
       |> Enum.map(fn {name, _, _} = var -> {name, var} end)
 
     context = Keyword.put(context, :args, args)

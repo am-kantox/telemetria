@@ -39,6 +39,11 @@ defmodule Telemetria.Options do
       doc: "Specifies whether telemetry should be enabled.",
       default: true
     ],
+    applications: [
+      type: :keyword_list,
+      doc: "List the applications to enable Telemetria support for, with parameters",
+      default: []
+    ],
     json_config_path: [
       type: :string,
       default: Path.join(["config", ".telemetria.config.json"]),
