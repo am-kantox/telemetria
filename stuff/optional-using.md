@@ -1,8 +1,8 @@
-## Optional Support for Telemetria in Custom Libraries
+# Optional Telemetria Support
 
 To optionally include `telemetria` support to your library do the following.
 
-### `mix.exs`
+## `mix.exs`
 
 In your `mix.exs` file, specify the dependency as `optional: true`
 
@@ -14,7 +14,7 @@ defp deps do
 end
 ```
 
-### Custom Module
+## Custom Module
 
 Declare the custom module `MyApp.Telemetria` as shown below.
 
@@ -45,7 +45,7 @@ defmodule MyApp.Telemetria do
 end
 ```
 
-### Conditional Include
+## Conditional Include
 
 In the module(s) where you want to optinally use `Telemetria`, add
 `use MyApp.Telemetria`. All the attributes are to be now declared with
