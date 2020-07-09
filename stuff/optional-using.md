@@ -39,7 +39,7 @@ defmodule MyApp.Telemetria do
   @spec use? :: boolean()
   def use?, do: @use
 
-  @spec use!(module :: module(), opts :: keyword()) :: :ok
+  @spec use!(module :: module(), opts :: keyword()) :: :ok | nil
   def use!(module, opts \\ true),
     do: if(Rambla.Telemetria.use?(), do: Module.put_attribute(module, :telemetria, opts))
 end
