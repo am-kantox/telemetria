@@ -1,6 +1,7 @@
 Application.ensure_started(:telemetry)
 
 defmodule Test.Telemetria.S do
+  @moduledoc false
   use Boundary
   defstruct(foo: 42, bar: :baz)
 end
