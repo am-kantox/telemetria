@@ -4,6 +4,11 @@ defmodule Telemetria.Test do
   doctest Telemetria
   alias Test.Telemetria.Example
 
+  setup_all do
+    Application.put_env(:logger, :console, [], persistent: true)
+    Application.put_env(:telemetria, :smart_log, false)
+  end
+
   test "attaches telemetry events to module functions and spits out logs" do
     log =
       capture_log(fn ->
@@ -93,12 +98,12 @@ defmodule Telemetria.Test do
         Process.sleep(100)
       end)
 
-    assert log =~ "[info]  [event: [:test, :telemetria, :example, :annotated_1]"
-    assert log =~ "[warn]  [event: [:test, :telemetria, :example, :annotated_2]"
+    assert log =~ "name: [:test, :telemetria, :example, :annotated_1]"
+    assert log =~ "name: [:test, :telemetria, :example, :annotated_2]"
     assert log =~ "result: 42"
   end
 
-  test "deep pattern match, @telemetry" do
+  test "@telemetry deep pattern match" do
     log =
       capture_log(fn ->
         assert {:ok, :bar} = Example.check_s(%Test.Telemetria.S{foo: :not_42})
@@ -107,6 +112,6 @@ defmodule Telemetria.Test do
         Process.sleep(100)
       end)
 
-    assert log =~ "[info]  [event: [:test, :telemetria, :example, :check_s]"
+    assert log =~ "name: [:test, :telemetria, :example, :check_s]"
   end
 end
