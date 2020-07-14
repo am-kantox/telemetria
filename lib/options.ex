@@ -39,6 +39,11 @@ defmodule Telemetria.Options do
       doc: "Specifies whether telemetry should be enabled.",
       default: true
     ],
+    smart_log: [
+      type: :boolean,
+      doc: "Log format to use; when true, custom json would be used",
+      default: false
+    ],
     applications: [
       type: :keyword_list,
       doc: "List the applications to enable Telemetria support for, with parameters",
