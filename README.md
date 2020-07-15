@@ -20,6 +20,12 @@ end
 
 ## Changelog
 
+- **`0.9.1`** —
+  - [ENH] `@telemetria process_info: true` keyword parameter
+  - [ENH] `@id` is set to the correct `otp_app`
+  - [ENH] `MFA` is set properly for alerts
+  - [ENH] arguments and result are grouped under `:call`
+  - [ENH] total metadata cleanup
 - **`0.9.0`** —
   - [ENH] add `Telemetria.Formatter` that can be used to produce JSON logs basing on metadata, natively integrated into `telemetría`
 - **`0.8.0`** —
