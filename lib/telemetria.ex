@@ -1,6 +1,6 @@
 defmodule Telemetria do
   use Boundary,
-    deps: [Telemetria.Instrumenter, Telemetria.Options, Telemetria.Mix.Events],
+    deps: [Telemetria.Instrumenter, Telemetria.Handler, Telemetria.Options, Telemetria.Mix.Events],
     exports: [Hooks]
 
   @moduledoc """
@@ -137,7 +137,10 @@ defmodule Telemetria do
     clauses =
       for {:->, meta, [args, clause]} <- clauses do
         {:->, meta,
-         [args, do_t(clause, Keyword.merge([arguments: extract_guards(args)], opts), __CALLER__)]}
+         [
+           args,
+           do_t(clause, Keyword.merge([arguments: extract_guards(args)], opts), __CALLER__)
+         ]}
       end
 
     {:fn, meta, clauses}
@@ -198,6 +201,7 @@ defmodule Telemetria do
           Telemetria.Hooks.option()
         ]) :: ast
         when ast: keyword() | {atom(), keyword(), any()}
+  @doc false
   def telemetry_wrap(expr, call, caller, context \\ [])
 
   def telemetry_wrap(expr, {:when, _meta, [call, _guards]}, %Macro.Env{} = caller, context) do
@@ -216,8 +220,6 @@ defmodule Telemetria do
       end)
       |> Enum.map(fn {name, _, _} = var -> {name, var} end)
 
-    context = Keyword.put(context, :args, args)
-
     if enabled?() do
       {block, expr} =
         if Keyword.keyword?(expr) do
@@ -233,7 +235,9 @@ defmodule Telemetria do
       unless is_nil(caller.module),
         do: Module.put_attribute(caller.module, :doc, {caller.line, telemetry: true})
 
-      caller = caller |> Map.take(~w|file line|a) |> Macro.escape()
+      caller = caller |> Map.take(~w|module function file line|a) |> Macro.escape()
+      {clause_args, context} = Keyword.pop(context, :arguments, [])
+      args = Keyword.merge(args, clause_args)
 
       block =
         quote do
@@ -255,7 +259,12 @@ defmodule Telemetria do
               system_time: now,
               consumed: benchmark
             },
-            %{env: unquote(caller), result: result, context: unquote(context)}
+            %{
+              env: unquote(caller),
+              result: result,
+              args: unquote(args),
+              context: unquote(context)
+            }
           )
 
           result

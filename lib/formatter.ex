@@ -11,33 +11,24 @@ defmodule Telemetria.Formatter do
   @spec format(Logger.level(), Logger.message(), Logger.Formatter.time(), Logger.metadata()) ::
           iodata()
   def format(level, message, timestamp, metadata) do
-    {meta, metadata} = Keyword.pop(metadata, :__meta__, [])
-    {measurements, metadata} = Keyword.pop(metadata, :__measurements__)
-    {rest, metadata} = Keyword.pop(metadata, :__rest__, [])
+    {telemetria, metadata} = Keyword.pop(metadata, :telemetría, [])
+    {process_info, metadata} = Keyword.pop(metadata, :process_info, [])
 
-    {otp_app, meta} = Keyword.pop(meta, :otp_app, :unknown)
-    {inspect_opts, meta} = Keyword.pop(meta, :inspect_opts, [])
-    {type, meta} = Keyword.pop(meta, :type, :log)
-    {severity, meta} = Keyword.pop(meta, :severity, level)
-
-    payload =
-      [
-        "@id": do_format(otp_app, inspect_opts),
-        "@timestamp": do_format(timestamp, inspect_opts),
-        "@type": do_format(type, inspect_opts),
-        message: do_format(message, inspect_opts),
-        severity: severity
-      ] ++ meta ++ metadata
-
-    payload = Keyword.update(payload, :context, rest, &Keyword.merge(rest, &1))
+    {otp_app, telemetria} = Keyword.pop(telemetria, :otp_app, :unknown)
+    {inspect_opts, telemetria} = Keyword.pop(telemetria, :inspect_opts, [])
+    {type, telemetria} = Keyword.pop(telemetria, :type, :log)
+    {severity, telemetria} = Keyword.pop(telemetria, :severity, level)
 
     payload =
-      measurements
-      |> is_nil()
-      |> if(
-        do: payload,
-        else: Keyword.put(payload, :measurements, do_format(measurements, inspect_opts))
-      )
+      ([
+         "@id": otp_app,
+         "@timestamp": timestamp,
+         "@type": type,
+         message: message,
+         severity: severity,
+         telemetria: telemetria,
+         process_info: process_info
+       ] ++ metadata)
       |> do_format(inspect_opts)
       |> Jason.encode_to_iodata!()
 
@@ -64,6 +55,9 @@ defmodule Telemetria.Formatter do
 
   defp do_format(input, _inspect_opts) when is_pid(input),
     do: input |> :erlang.pid_to_list() |> to_string()
+
+  defp do_format(input, _inspect_opts) when is_reference(input),
+    do: input |> :erlang.ref_to_list() |> to_string()
 
   defp do_format(%{} = input, inspect_opts) do
     input
