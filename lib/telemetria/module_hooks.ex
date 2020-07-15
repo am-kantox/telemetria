@@ -24,7 +24,7 @@ defmodule Telemetria.Hooks do
   end
 
   @typedoc false
-  @type option :: {:level, level()} | {:inspect, Inspect.Opts.t()} | {atom(), any()}
+  @type option :: {:level, level()} | {:inspect_opts, Inspect.Opts.t()} | {atom(), any()}
   @typedoc false
   @type info :: %{
           env: Macro.Env.t(),
@@ -87,7 +87,14 @@ defmodule Telemetria.Hooks do
       hooks
       |> Enum.map(fn info ->
         meta = info.env
-        head = maybe_guarded(info.guards, info.fun, [file: meta.file, line: meta.line], info.args)
+
+        head =
+          maybe_guarded(
+            info.guards,
+            info.fun,
+            [module: meta.module, function: meta.function, file: meta.file, line: meta.line],
+            info.args
+          )
 
         body =
           Telemetria.telemetry_wrap(info.body, {info.fun, [line: meta.line], info.args}, meta,

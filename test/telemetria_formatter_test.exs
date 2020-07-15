@@ -37,7 +37,7 @@ defmodule Telemetria.FormatterTest do
       end)
 
     assert log =~ ~s|[\"test\",\"telemetria\",\"example\",\"half\"]|
-    assert log =~ ~s|\"arguments\":{\"a\":42}|
+    assert log =~ ~s|\"args\":{\"a\":42}|
     assert log =~ ~s|\"result\":21|
   end
 
@@ -106,8 +106,8 @@ defmodule Telemetria.FormatterTest do
         Process.sleep(100)
       end)
 
-    assert log =~ ~s|name\":[\"test\",\"telemetria\",\"example\",\"annotated_1\"]|
-    assert log =~ ~s|name\":[\"test\",\"telemetria\",\"example\",\"annotated_2\"]|
+    assert log =~ ~s|event\":[\"test\",\"telemetria\",\"example\",\"annotated_1\"]|
+    assert log =~ ~s|event\":[\"test\",\"telemetria\",\"example\",\"annotated_2\"]|
     assert log =~ ~s|\"result\":42|
   end
 end

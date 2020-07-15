@@ -18,6 +18,9 @@ defmodule Telemetria.Handler.Default do
                     |> Enum.uniq()
                     |> Kernel.==([{Telemetria.Formatter, :format}])
 
+  @default_level Application.get_env(:telemetria, :level, :info)
+  @default_process_info Application.get_env(:telemetria, :process_info, false)
+
   @behaviour Handler
   @doc false
   @impl Handler
@@ -37,12 +40,13 @@ defmodule Telemetria.Handler.Default do
   defp do_handle_event(true, event, measurements, metadata, config) do
     metadata = build_metadata(event, measurements, metadata, config)
     Logger.metadata(metadata[:metadata])
-    do_log(metadata[:severity], metadata[:message])
+    do_log(metadata[:severity], metadata[:message], metadata[:env])
+    Logger.reset_metadata(metadata[:default_metadata])
   end
 
   defp do_handle_event(false, event, measurements, metadata, config) do
     metadata = build_metadata(event, measurements, metadata, config)
-    do_log(metadata[:severity], inspect(metadata[:metadata]))
+    do_log(metadata[:severity], inspect(metadata[:metadata]), metadata[:env])
   end
 
   @spec build_metadata(
@@ -52,9 +56,24 @@ defmodule Telemetria.Handler.Default do
           :telemetry.handler_config()
         ) :: [{:severity, atom()}, {:metadata, keyword()}]
   defp build_metadata(event, measurements, metadata, config) do
-    {inspect_opts, metadata} = Map.pop(metadata, :inspect, [])
     {options, metadata} = pop_in(metadata, [:context, :options])
-    {context, metadata} = Map.pop(metadata, :context, [])
+    options = options || []
+    {_context, metadata} = Map.pop(metadata, :context, [])
+    {env, metadata} = Map.pop(metadata, :env, %{})
+
+    env =
+      {env[:module], env[:function]}
+      |> case do
+        {m, {f, a}} when not is_nil(m) -> Map.put(env, :function, Function.capture(m, f, a))
+        _ -> env
+      end
+      |> Map.to_list()
+
+    {severity, options} = Keyword.pop(options, :level, @default_level)
+    {inspect_opts, options} = Keyword.pop(options, :inspect_opts, [])
+    {message, options} = Keyword.pop(options, :message, "")
+    {process_info?, options} = Keyword.pop(options, :process_info, @default_process_info)
+    process_info = if process_info?, do: Telemetria.Handler.process_info(), else: []
 
     otp_app =
       Application.get_env(
@@ -66,30 +85,36 @@ defmodule Telemetria.Handler.Default do
         end
       )
 
-    message = Keyword.get(options || [], :message, "")
-    severity = Keyword.get(options || [], :level, Application.get_env(:telemetria, :level, :info))
+    default_metadata = Logger.metadata()
+    type = if match?([_, :vm | _], event), do: :stats, else: :metrics
 
     [
       severity: severity,
       message: message,
+      default_metadata: default_metadata,
+      env: env,
       metadata:
-        Keyword.merge(Logger.metadata(),
-          __meta__: [
+        default_metadata
+        |> Keyword.merge(
+          telemetría: [
             otp_app: otp_app,
             severity: severity,
-            type: :metrics,
-            name: event,
+            type: type,
+            event: event,
+            name: Enum.join(event, "."),
             inspect_opts: inspect_opts,
-            context: context
+            config: config,
+            context: options,
+            measurements: measurements,
+            call: metadata |> Map.to_list() |> Keyword.take([:args, :result])
           ],
-          __measurements__: measurements,
-          __rest__: Map.to_list(metadata),
-          config: config
+          process_info: process_info
         )
     ]
   end
 
-  @spec do_log(level :: Telemetria.Hooks.level(), message :: binary()) :: :ok
+  @spec do_log(level :: Telemetria.Hooks.level(), message :: binary(), env :: Logger.metadata()) ::
+          :ok
   if(Version.match?(System.version(), ">= 1.11.0-dev")) do
     @levels ~w|emergency alert critical error warn notice info debug|a
   else
@@ -97,10 +122,10 @@ defmodule Telemetria.Handler.Default do
   end
 
   Enum.each(@levels, fn level ->
-    defp do_log(unquote(level), message) when is_binary(message),
-      do: Logger.unquote(level)(fn -> message end)
+    defp do_log(unquote(level), message, env) when is_binary(message),
+      do: Logger.unquote(level)(fn -> message end, env)
   end)
 
-  defp do_log(level, message) when is_binary(message),
-    do: Logger.warn(fn -> "[#{inspect(level)}] " <> message end)
+  defp do_log(level, message, env) when is_binary(message),
+    do: Logger.warn(fn -> "[#{inspect(level)}] " <> message end, env)
 end

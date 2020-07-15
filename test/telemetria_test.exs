@@ -29,7 +29,7 @@ defmodule Telemetria.Test do
       end)
 
     assert log =~ "[:test, :telemetria, :example, :half]"
-    assert log =~ "arguments: [a: 42]"
+    assert log =~ "args: [a: 42]"
     assert log =~ "result: 21"
   end
 
@@ -98,8 +98,8 @@ defmodule Telemetria.Test do
         Process.sleep(100)
       end)
 
-    assert log =~ "name: [:test, :telemetria, :example, :annotated_1]"
-    assert log =~ "name: [:test, :telemetria, :example, :annotated_2]"
+    assert log =~ "event: [:test, :telemetria, :example, :annotated_1]"
+    assert log =~ "event: [:test, :telemetria, :example, :annotated_2]"
     assert log =~ "result: 42"
   end
 
@@ -112,6 +112,6 @@ defmodule Telemetria.Test do
         Process.sleep(100)
       end)
 
-    assert log =~ "name: [:test, :telemetria, :example, :check_s]"
+    assert log =~ "event: [:test, :telemetria, :example, :check_s]"
   end
 end
