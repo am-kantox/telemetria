@@ -209,16 +209,26 @@ defmodule Telemetria do
   end
 
   def telemetry_wrap(expr, call, %Macro.Env{} = caller, context) do
+    find_name = fn
+      {{:_, _, _}, _} -> nil
+      {{_, _, na} = n, _} when na in [nil, []] -> n
+      {{:=, _, [{_, _, na} = n, _]}, _} when na in [nil, []] -> n
+      {{:=, _, [_, {_, _, na} = n]}, _} when na in [nil, []] -> n
+      {any, idx} -> {:=, [], [{:"arg_#{idx}", [], Elixir}, any]}
+    end
+
     args =
       case call do
         {fun, meta, args} when is_atom(fun) and is_list(meta) and is_list(args) -> args
         _ -> []
       end
-      |> Enum.filter(fn
-        {name, _, _} when is_atom(name) -> not match?(<<?_, _::binary>>, Atom.to_string(name))
-        _ -> false
+      |> Enum.with_index()
+      |> Enum.map(find_name)
+      |> Enum.reject(&is_nil/1)
+      |> Enum.map(fn
+        {:=, _, [{name, _, _}, var]} -> {name, var}
+        {name, _, _} = var -> {name, var}
       end)
-      |> Enum.map(fn {name, _, _} = var -> {name, var} end)
 
     if enabled?() do
       {block, expr} =
