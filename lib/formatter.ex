@@ -59,6 +59,14 @@ defmodule Telemetria.Formatter do
   defp do_format(input, _inspect_opts) when is_reference(input),
     do: input |> :erlang.ref_to_list() |> to_string()
 
+  defp do_format(%type{} = input, inspect_opts) do
+    input
+    |> Map.from_struct()
+    |> Enum.map(fn {key, value} -> {key, do_format(value, inspect_opts)} end)
+    |> Map.new()
+    |> Map.put(:__type__, type)
+  end
+
   defp do_format(%{} = input, inspect_opts) do
     input
     |> Enum.map(fn {key, value} -> {key, do_format(value, inspect_opts)} end)
