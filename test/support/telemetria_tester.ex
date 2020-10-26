@@ -54,7 +54,7 @@ defmodule Test.Telemetria.Example do
   @telemetria level: :warn
   defp annotated_2(i) when (is_integer(i) and i == 42) or is_nil(i), do: i || 42
   @telemetria level: :error
-  defp annotated_2(i), do: :foo
+  defp annotated_2(i), do: if(is_nil(i), do: nil, else: :foo)
 
   deft guarded(a) when is_integer(a) and a > 0 do
     a + a

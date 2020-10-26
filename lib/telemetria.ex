@@ -1,7 +1,5 @@
 defmodule Telemetria do
-  use Boundary,
-    deps: [Telemetria.Instrumenter, Telemetria.Handler, Telemetria.Options, Telemetria.Mix.Events],
-    exports: [Hooks]
+  use Boundary, exports: [Hooks]
 
   @moduledoc """
   `Telemetría` is the opinionated wrapper for [`:telemetry`](https://hexdocs.pm/telemetry)
