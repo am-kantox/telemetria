@@ -2,7 +2,7 @@ defmodule Telemetria.MixProject do
   use Mix.Project
 
   @app :telemetria
-  @version "0.9.3"
+  @version "0.9.4"
 
   def project do
     [
@@ -31,7 +31,7 @@ defmodule Telemetria.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      applications: [:logger, :telemetry],
+      extra_applications: [:logger, :telemetry],
       mod: {Telemetria.Application, []},
       start_phases: [{:telemetry_setup, []}],
       registered: [Telemetria, Telemetria.Application, Telemetria.Instrumenter]
@@ -40,13 +40,13 @@ defmodule Telemetria.MixProject do
 
   defp deps do
     [
-      {:boundary, "~> 0.4", runtime: false},
+      {:boundary, "~> 0.4"},
       {:telemetry, "~> 0.4"},
       {:telemetry_poller, "~> 0.5"},
       {:jason, "~> 1.0"},
       {:nimble_options, "~> 0.2"},
       # dev / test
-      {:dialyxir, "~> 1.0.0", only: [:dev, :test, :ci]},
+      {:dialyxir, "~> 1.0.0", only: [:dev, :test, :ci], runtime: false},
       {:credo, "~> 1.0", only: [:dev, :ci], runtime: false},
       {:ex_doc, "~> 0.11", only: :dev, runtime: false}
     ]
