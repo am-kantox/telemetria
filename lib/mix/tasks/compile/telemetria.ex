@@ -2,7 +2,7 @@ defmodule Mix.Tasks.Compile.Telemetria do
   # credo:disable-for-this-file Credo.Check.Readability.Specs
   @moduledoc false
 
-  use Boundary
+  use Boundary, deps: [Telemetria]
 
   use Mix.Task.Compiler
 

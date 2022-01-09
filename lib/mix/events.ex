@@ -1,7 +1,7 @@
 defmodule Telemetria.Mix.Events do
   @moduledoc false
 
-  @json_config_path Application.get_env(
+  @json_config_path Application.compile_env(
                       :telemetry,
                       :json_config_path,
                       Path.join(["config", ".telemetria.config.json"])

@@ -40,13 +40,13 @@ defmodule Telemetria.MixProject do
 
   defp deps do
     [
-      {:boundary, "~> 0.4"},
-      {:telemetry, "~> 0.4"},
-      {:telemetry_poller, "~> 0.5"},
+      {:boundary, "~> 0.4", runtime: false, app: false},
+      {:telemetry, "~> 1.0"},
+      {:telemetry_poller, "~> 1.0"},
       {:jason, "~> 1.0"},
       {:nimble_options, "~> 0.2"},
       # dev / test
-      {:dialyxir, "~> 1.0.0", only: [:dev, :test, :ci], runtime: false},
+      {:dialyxir, "~> 1.0", only: [:dev, :test, :ci], runtime: false},
       {:credo, "~> 1.0", only: [:dev, :ci], runtime: false},
       {:ex_doc, "~> 0.11", only: :dev, runtime: false}
     ]

@@ -12,14 +12,15 @@ defmodule Telemetria.Handler.Default do
 
   require Logger
 
+  # credo:disable-for-next-line Credo.Check.Warning.ApplicationConfigInModuleAttribute
   @logger_formatter Application.get_all_env(:logger)
                     |> Enum.map(fn {_, v} -> if Keyword.keyword?(v), do: v[:format] end)
                     |> Enum.reject(&is_nil/1)
                     |> Enum.uniq()
                     |> Kernel.==([{Telemetria.Formatter, :format}])
 
-  @default_level Application.get_env(:telemetria, :level, :info)
-  @default_process_info Application.get_env(:telemetria, :process_info, false)
+  @default_level Application.compile_env(:telemetria, :level, :info)
+  @default_process_info Application.compile_env(:telemetria, :process_info, false)
 
   @behaviour Handler
   @doc false

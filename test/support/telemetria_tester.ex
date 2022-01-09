@@ -9,7 +9,7 @@ end
 defmodule Test.Telemetria.Example do
   @moduledoc false
 
-  use Boundary, deps: [Telemetria], exports: []
+  use Boundary, deps: [Telemetria, Test.Telemetria.S], exports: []
 
   use Telemetria, action: :import
 

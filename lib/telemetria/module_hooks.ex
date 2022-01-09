@@ -45,7 +45,7 @@ defmodule Telemetria.Hooks do
       {_, _, nil} ->
         raise Telemetria.Error, "only functions with body can be currently annotated"
 
-      {_, kind, _} when not (kind in [:def, :defp]) ->
+      {_, kind, _} when kind not in [:def, :defp] ->
         raise Telemetria.Error, "only function annotating is currently supported"
 
       {options, kind, body} when is_list(options) or options == true ->
