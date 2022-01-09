@@ -40,7 +40,7 @@ defmodule Telemetria.MixProject do
 
   defp deps do
     [
-      {:boundary, "~> 0.4", runtime: false, app: false},
+      {:boundary, "~> 0.4", runtime: false},
       {:telemetry, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
       {:jason, "~> 1.0"},
