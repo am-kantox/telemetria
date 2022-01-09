@@ -49,21 +49,23 @@ defmodule Telemetria.Hooks do
         raise Telemetria.Error, "only function annotating is currently supported"
 
       {options, kind, body} when is_list(options) or options == true ->
-        options = if options == true, do: [], else: options
+        {apply?, options} = pop_apply(options)
 
-        Module.put_attribute(
-          env.module,
-          :telemetria_hooks,
-          struct(__MODULE__,
-            env: env,
-            kind: kind,
-            fun: fun,
-            args: args,
-            guards: guards,
-            body: body,
-            options: options
+        if apply? do
+          Module.put_attribute(
+            env.module,
+            :telemetria_hooks,
+            struct(__MODULE__,
+              env: env,
+              kind: kind,
+              fun: fun,
+              args: args,
+              guards: guards,
+              body: body,
+              options: options
+            )
           )
-        )
+        end
 
         Module.delete_attribute(env.module, :telemetria)
 
@@ -113,4 +115,22 @@ defmodule Telemetria.Hooks do
 
   defp maybe_guarded(guards, f, meta, args) when is_list(guards),
     do: {:when, [context: Elixir], [{f, meta, args} | guards]}
+
+  @spec pop_apply([{:if, boolean() | binary()} | option()]) :: {boolean(), [option()]}
+  defp pop_apply(true), do: pop_apply(if: true)
+
+  defp pop_apply(options) do
+    options
+    |> Keyword.pop(:if, true)
+    |> case do
+      {code, options} when is_binary(code) ->
+        {Code.compile_quoted(code), options}
+
+      {apply?, options} when is_boolean(apply?) ->
+        {apply?, options}
+
+      {weird, _options} ->
+        raise Telemetria.Error, "unsupported `if` value " <> inspect(weird)
+    end
+  end
 end

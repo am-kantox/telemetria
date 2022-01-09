@@ -14,7 +14,7 @@ defmodule Telemetria.Instrumenter do
     :telemetry.attach_many(
       Atom.to_string(otp_app()),
       events(),
-      &handle_event/4,
+      &Telemetria.Instrumenter.handle_event/4,
       buffer()
     )
   end

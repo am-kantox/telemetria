@@ -38,7 +38,7 @@ defmodule Test.Telemetria.Example do
 
   @telemetria true
   def annotated_1(foo), do: annotated_2(foo)
-  @telemetria true
+  @telemetria if: Application.compile_env(:telemetria, :annotated_1?, true)
   def annotated_1(foo, bar), do: if(is_nil(bar), do: annotated_2(foo))
 
   def tmed, do: t(21 + 21)
