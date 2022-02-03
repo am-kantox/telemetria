@@ -72,7 +72,7 @@ defmodule Telemetria.MixProject do
   defp package do
     [
       name: @app,
-      files: ~w|config stuff lib mix.exs README.md LICENSE|,
+      files: ~w|stuff lib mix.exs README.md LICENSE|,
       maintainers: ["Aleksei Matiushkin"],
       licenses: ["Kantox LTD"],
       links: %{

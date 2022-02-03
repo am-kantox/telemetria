@@ -114,4 +114,17 @@ defmodule Telemetria.Test do
 
     assert log =~ "event: [:test, :telemetria, :example, :check_s]"
   end
+
+  test "@telemetry different clauses" do
+    log =
+      capture_log(fn ->
+        assert 0 == Example.annotated_3(nil)
+        assert 42 == Example.annotated_3("42")
+        assert 42 == Example.annotated_3(42)
+        Process.sleep(100)
+      end)
+
+    assert log =~ "[:test, :telemetria, :example, :annotated_3]"
+    assert log =~ "result: 42"
+  end
 end

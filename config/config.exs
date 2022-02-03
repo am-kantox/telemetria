@@ -11,5 +11,6 @@ config :telemetria,
     [:test, :telemetria, :example, :guarded],
     [:test, :telemetria, :example, :annotated_1],
     [:test, :telemetria, :example, :annotated_2],
+    [:test, :telemetria, :example, :annotated_3],
     [:test, :telemetria, :example, :check_s]
   ]
