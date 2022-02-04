@@ -166,12 +166,11 @@ defmodule Telemetria do
     end
   end
 
-  @compile {:inline, telemetry_prefix: 2}
   @spec telemetry_prefix(
           Macro.Env.t(),
           {atom(), keyword(), tuple()} | nil | maybe_improper_list()
         ) :: [atom()]
-  defp telemetry_prefix(%Macro.Env{module: mod, function: fun}, call) do
+  def telemetry_prefix(%Macro.Env{module: mod, function: fun}, call) do
     suffix =
       case fun do
         {f, _arity} -> [f]

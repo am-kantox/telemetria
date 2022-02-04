@@ -7,7 +7,7 @@ defmodule Mix.Tasks.Compile.Telemetria do
   use Mix.Task.Compiler
 
   alias Mix.Task.Compiler
-  alias Telemetria.Mix.Events
+  alias Telemetria.{Hooks, Mix.Events}
 
   @preferred_cli_env :dev
   @manifest_events "telemetria_events"
@@ -39,15 +39,49 @@ defmodule Mix.Tasks.Compile.Telemetria do
   end
 
   @doc false
-  def trace({remote, meta, Telemetria, name, arity}, env)
+  def trace({remote, meta, Telemetria, :__using__, 1}, env)
       when remote in ~w/remote_macro imported_macro/a do
     pos = if Keyword.keyword?(meta), do: Keyword.get(meta, :line, env.line)
-    message = "Added telemetry call through #{remote} {#{name}, #{arity}}"
+    message = "This file contains Telemetria calls, see diagnostics below"
 
     Events.put(
       :diagnostic,
       diagnostic(message, details: env.context, position: pos, file: env.file)
     )
+
+    :ok
+  end
+
+  def trace({:remote_macro, _meta, Telemetria.Hooks, :__before_compile__, 1}, env) do
+    env.module
+    |> Module.get_attribute(:telemetria_hooks, [])
+    |> Enum.each(fn
+      %Hooks{annotation_type: :head} = hook ->
+        # [TODO] Point to all the clauses of guarged function
+        event = Telemetria.telemetry_prefix(env, {hook.fun, [line: hook.env.line], hook.args})
+
+        message =
+          "All clauses of the annotated function are to be wrapped in Telemetria event with id: #{event}"
+
+        Events.put(
+          :diagnostic,
+          diagnostic(message, details: env.context, position: hook.env.line, file: hook.env.file)
+        )
+
+      %Hooks{annotation_type: :clause} = hook ->
+        event = Telemetria.telemetry_prefix(env, {hook.fun, [line: hook.env.line], hook.args})
+
+        message =
+          "Annotated function is to be wrapped in Telemetria event with id: #{inspect(event)}"
+
+        Events.put(
+          :diagnostic,
+          diagnostic(message, details: env.context, position: hook.env.line, file: hook.env.file)
+        )
+
+      %Hooks{} = _hook ->
+        :ok
+    end)
 
     :ok
   end

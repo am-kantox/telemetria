@@ -200,6 +200,7 @@ defmodule Telemetria.Hooks do
       doc = [
         annotation_type: hook.annotation_type,
         fun: "#{hook.kind} #{hook.env.module}.#{hook.fun}(#{args})#{guards}",
+        location: [file: hook.env.file, line: hook.env.line],
         arity: hook.arity,
         body: not is_nil(hook.body),
         options: hook.options
