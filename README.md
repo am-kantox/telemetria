@@ -20,6 +20,8 @@ end
 
 ## Changelog
 
+- **`0.11.1`** —
+  - [ENH] diagnostics improved
 - **`0.11.0`** —
   - [FIX] properly handle `@telemetria` attribute on function heads and multiple clauses
   - [ENH] purge level for telemetria hooks
