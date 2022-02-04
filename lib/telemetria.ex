@@ -166,6 +166,10 @@ defmodule Telemetria do
     end
   end
 
+  @doc false
+  @spec noop(any()) :: any()
+  def noop(arg), do: arg
+
   @spec telemetry_prefix(
           Macro.Env.t(),
           {atom(), keyword(), tuple()} | nil | maybe_improper_list()
@@ -243,6 +247,28 @@ defmodule Telemetria do
         do: Module.put_attribute(caller.module, :doc, {caller.line, telemetry: true})
 
       caller = caller |> Map.take(~w|module function file line|a) |> Macro.escape()
+
+      fix_fun = fn
+        nil ->
+          &Telemetria.noop/1
+
+        {mod, fun} ->
+          Function.capture(mod, fun, 1)
+
+        f when is_function(f, 1) ->
+          f
+
+        weird ->
+          raise Telemetria.Error,
+                "transform must be a tuple `{mod, fun}` or a function capture, #{inspect(weird)} given"
+      end
+
+      args_transform =
+        context |> get_in([:options, :transform, :args]) |> fix_fun.() |> Macro.escape()
+
+      result_transform =
+        context |> get_in([:options, :transform, :result]) |> fix_fun.() |> Macro.escape()
+
       {clause_args, context} = Keyword.pop(context, :arguments, [])
       args = Keyword.merge(args, clause_args)
 
@@ -268,8 +294,8 @@ defmodule Telemetria do
             },
             %{
               env: unquote(caller),
-              result: result,
-              args: unquote(args),
+              result: unquote(result_transform).(result),
+              args: unquote(args_transform).(unquote(args)),
               context: unquote(context)
             }
           )
