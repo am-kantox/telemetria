@@ -94,6 +94,8 @@ defmodule Telemetria.Test do
   test "@telemetry level:" do
     log =
       capture_log(fn ->
+        assert 0 == Example.annotated_1(nil)
+        assert :forty_two == Example.annotated_1("42")
         assert 42 == Example.annotated_1(42)
         Process.sleep(100)
       end)
@@ -101,6 +103,9 @@ defmodule Telemetria.Test do
     assert log =~ "event: [:test, :telemetria, :example, :annotated_1]"
     assert log =~ "event: [:test, :telemetria, :example, :annotated_2]"
     assert log =~ "result: 42"
+    assert log =~ "[info]"
+    assert log =~ "[error]"
+    refute log =~ "[debug]"
   end
 
   test "@telemetry deep pattern match" do
