@@ -1,6 +1,8 @@
 import Config
 
 config :telemetria,
+  purge_level: :debug,
+  level: :info,
   events: [
     [:test, :telemetria, :example, :twice],
     [:test, :telemetria, :example, :sum_with_doubled],

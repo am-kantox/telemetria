@@ -19,7 +19,6 @@ defmodule Telemetria.Handler.Default do
                     |> Enum.uniq()
                     |> Kernel.==([{Telemetria.Formatter, :format}])
 
-  @default_level Application.compile_env(:telemetria, :level, :info)
   @default_process_info Application.compile_env(:telemetria, :process_info, false)
 
   @behaviour Handler
@@ -31,6 +30,18 @@ defmodule Telemetria.Handler.Default do
     |> do_handle_event(event, measurements, metadata, config)
   end
 
+  defmacrop maybe_log(severity, do: block) do
+    quote do
+      case Logger.compare_levels(
+             unquote(severity),
+             Application.get_env(:telemetria, :level, Logger.level())
+           ) do
+        :lt -> []
+        _ -> unquote(block)
+      end
+    end
+  end
+
   @spec do_handle_event(
           boolean(),
           :telemetry.event_name(),
@@ -40,14 +51,20 @@ defmodule Telemetria.Handler.Default do
         ) :: :ok
   defp do_handle_event(true, event, measurements, metadata, config) do
     metadata = build_metadata(event, measurements, metadata, config)
-    Logger.metadata(metadata[:metadata])
-    do_log(metadata[:severity], metadata[:message], metadata[:env])
-    Logger.reset_metadata(metadata[:default_metadata])
+
+    maybe_log metadata[:severity] do
+      Logger.metadata(metadata[:metadata])
+      do_log(metadata[:severity], metadata[:message], metadata[:env])
+      Logger.reset_metadata(metadata[:default_metadata])
+    end
   end
 
   defp do_handle_event(false, event, measurements, metadata, config) do
     metadata = build_metadata(event, measurements, metadata, config)
-    do_log(metadata[:severity], inspect(metadata[:metadata]), metadata[:env])
+
+    maybe_log metadata[:severity] do
+      do_log(metadata[:severity], inspect(metadata[:metadata]), metadata[:env])
+    end
   end
 
   @spec build_metadata(
@@ -70,7 +87,9 @@ defmodule Telemetria.Handler.Default do
       end
       |> Map.to_list()
 
-    {severity, options} = Keyword.pop(options, :level, @default_level)
+    {severity, options} =
+      Keyword.pop(options, :level, Application.get_env(:telemetria, :level, Logger.level()))
+
     {inspect_opts, options} = Keyword.pop(options, :inspect_opts, [])
     {message, options} = Keyword.pop(options, :message, "")
     {process_info?, options} = Keyword.pop(options, :process_info, @default_process_info)

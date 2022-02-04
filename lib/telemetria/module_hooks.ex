@@ -41,6 +41,15 @@ defmodule Telemetria.Hooks do
         }
   defstruct ~w|annotation_type env kind fun arity args guards body options|a
 
+  @default_level Application.compile_env(:telemetria, :level, Logger.level())
+  @strict Application.compile_env(:telemetria, :strict, false)
+
+  purge_level =
+    get_in(Application.compile_env(:logger, :compile_time_purge_matching), [:level_lower_than]) ||
+      Logger.level()
+
+  @purge_level Application.compile_env(:telemetria, :purge_level, purge_level)
+
   def __on_definition__(env, kind, fun, args, guards, body) do
     case {Module.get_attribute(env.module, :telemetria), kind, body} do
       {options, kind, body} when kind in [:def, :defp] ->
@@ -121,13 +130,23 @@ defmodule Telemetria.Hooks do
 
   defp pop_apply(options, body) do
     options
-    |> Keyword.pop(:if, true)
+    |> Keyword.put_new(:level, @default_level)
+    |> Keyword.pop(:if, not @strict)
     |> case do
       {false, options} ->
         {:none, options}
 
       {true, options} ->
-        {if(is_nil(body), do: :head, else: :clause), options}
+        allow? =
+          options
+          |> Keyword.fetch!(:level)
+          |> Logger.compare_levels(@purge_level)
+
+        case {allow?, body} do
+          {:lt, _} -> {:none, options}
+          {_, nil} -> {:head, options}
+          {_, _} -> {:clause, options}
+        end
 
       {weird, _options} ->
         raise Telemetria.Error, "unsupported `if` value " <> inspect(weird)

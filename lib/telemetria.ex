@@ -94,13 +94,13 @@ defmodule Telemetria do
   defmacro __using__(opts) do
     initial_ast =
       case Keyword.get(opts, :action, :none) do
-        :require -> quote(do: require(Telemetria))
-        :import -> quote(do: import(Telemetria))
+        :require -> quote(location: :keep, generated: true, do: require(Telemetria))
+        :import -> quote(location: :keep, generated: true, do: import(Telemetria))
         :none -> :ok
         unknown -> IO.puts("Ignored unknown value for :action option: " <> inspect(unknown))
       end
 
-    quote do
+    quote location: :keep, generated: true do
       unquote(initial_ast)
       Module.register_attribute(__MODULE__, :telemetria, accumulate: false)
       Module.register_attribute(__MODULE__, :telemetria_hooks, accumulate: true)
@@ -114,7 +114,7 @@ defmodule Telemetria do
   defmacro deft(call, expr) do
     expr = telemetry_wrap(expr, call, __CALLER__)
 
-    quote do
+    quote location: :keep, generated: true do
       Kernel.def(unquote(call), unquote(expr))
     end
   end
@@ -123,7 +123,7 @@ defmodule Telemetria do
   defmacro defpt(call, expr) do
     expr = telemetry_wrap(expr, call, __CALLER__)
 
-    quote do
+    quote location: :keep, generated: true do
       Kernel.defp(unquote(call), unquote(expr))
     end
   end
@@ -248,7 +248,7 @@ defmodule Telemetria do
       args = Keyword.merge(args, clause_args)
 
       block =
-        quote do
+        quote location: :keep, generated: true do
           reference = inspect(make_ref())
 
           now = [

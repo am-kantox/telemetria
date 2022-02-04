@@ -3,6 +3,10 @@ defmodule Telemetria.Options do
 
   use Boundary, deps: [], exports: []
 
+  @log_levels if Version.match?(System.version(), ">= 1.11.0-dev"),
+                do: ~w|emergency alert critical error warn notice info debug|a,
+                else: ~w|error warn info debug|a
+
   @spec list([any()], [{module(), atom()} | {module(), atom(), [any()]}]) ::
           {:ok, [any()]} | {:error, binary()}
   @doc false
@@ -28,6 +32,12 @@ defmodule Telemetria.Options do
         {:error, "Expected MF pair returning a function of arity 4, got #{inspect({mod, fun})}."}
   end
 
+  @spec log_level(atom()) :: {:ok, atom()} | {:error, binary()}
+  def log_level(atom) when atom in @log_levels, do: {:ok, atom}
+
+  def log_level(atom),
+    do: {:error, "Value (#{inspect(atom)}) should be one of #{inspect(@log_levels)}"}
+
   @schema [
     otp_app: [
       type: :atom,
@@ -38,6 +48,23 @@ defmodule Telemetria.Options do
       type: :boolean,
       doc: "Specifies whether telemetry should be enabled.",
       default: true
+    ],
+    level: [
+      type: {:custom, Telemetria.Options, :log_level, []},
+      doc:
+        "Telemetria level to skip logging beyond, as in [Logger](https://hexdocs.pm/logger/Logger.html#module-application-configuration)",
+      default: :debug
+    ],
+    purge_level: [
+      type: {:custom, Telemetria.Options, :log_level, []},
+      doc:
+        "Telemetria level to purge beyond, as in [Logger](https://hexdocs.pm/logger/Logger.html#module-application-configuration)",
+      default: :debug
+    ],
+    strict: [
+      type: :boolean,
+      doc: "Ignore `@telemetria` tags without `if` clause",
+      default: false
     ],
     smart_log: [
       type: :boolean,
