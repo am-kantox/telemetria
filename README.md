@@ -20,6 +20,8 @@ end
 
 ## Changelog
 
+- **`0.12.0`** —
+  - [ENH] Allow `[transform: [args: M.f/1, result: {M, :f}]]` coercers in `@telemetria` attribute
 - **`0.11.1`** —
   - [ENH] diagnostics improved
 - **`0.11.0`** —
