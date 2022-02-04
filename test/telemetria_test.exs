@@ -102,10 +102,13 @@ defmodule Telemetria.Test do
 
     assert log =~ "event: [:test, :telemetria, :example, :annotated_1]"
     assert log =~ "event: [:test, :telemetria, :example, :annotated_2]"
-    assert log =~ "result: 42"
-    assert log =~ "[info]"
-    assert log =~ "[error]"
     refute log =~ "[debug]"
+    assert log =~ "[info]"
+    assert log =~ ~s|call: [args: [foo: 42], result: 42]|
+    assert log =~ "[warning]"
+    assert log =~ ~s|call: [args: "[i: 42]", result: "42"]|
+    assert log =~ "[error]"
+    assert log =~ ~s|call: [args: [i: "42"], result: :forty_two]|
   end
 
   test "@telemetry deep pattern match" do
