@@ -20,6 +20,10 @@ end
 
 ## Changelog
 
+- **`0.11.0`** —
+  - [FIX] properly handle `@telemetria` attribute on function heads and multiple clauses
+  - [ENH] purge level for telemetria hooks
+  - [ENH] level for telemetria logs
 - **`0.9.1`** —
   - [ENH] `@telemetria process_info: true` keyword parameter
   - [ENH] `@id` is set to the correct `otp_app`
