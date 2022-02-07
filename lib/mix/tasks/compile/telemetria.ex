@@ -61,7 +61,7 @@ defmodule Mix.Tasks.Compile.Telemetria do
         event = Telemetria.telemetry_prefix(env, {hook.fun, [line: hook.env.line], hook.args})
 
         message =
-          "All clauses of the annotated function are to be wrapped in Telemetria event with id: #{event}"
+          "All clauses of the annotated function are to be wrapped in Telemetria event with id: #{inspect(event)}"
 
         Events.put(
           :diagnostic,
