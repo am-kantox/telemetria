@@ -161,6 +161,7 @@ defmodule Telemetria.Hooks do
       hooks
       |> Enum.map(& &1.annotation_type)
       |> Enum.uniq()
+      |> Enum.sort()
       |> case do
         [:head, :none] ->
           [head | nones] = hooks
