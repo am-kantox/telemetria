@@ -3,7 +3,7 @@ defmodule Telemetria.Instrumenter do
 
   alias Telemetria.{ConfigProvider, Handler}
 
-  use Boundary, deps: [ConfigProvider], exports: []
+  use Boundary, deps: [ConfigProvider, Handler], exports: []
 
   require Logger
 

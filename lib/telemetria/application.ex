@@ -10,10 +10,13 @@ defmodule Telemetria.Application do
 
     opts = [strategy: :rest_for_one, name: Telemetria]
 
+    io_args =
+      if Version.match?(System.version(), ">= 1.15.0-dev"), do: {self(), "", []}, else: {"", []}
+
     children = [
       %{
         id: Telemetria.Buffer,
-        start: {GenServer, :start_link, [StringIO, {"", []}, [name: Telemetria.Buffer]]}
+        start: {GenServer, :start_link, [StringIO, io_args, [name: Telemetria.Buffer]]}
       },
       {Telemetria.Polling, Application.get_env(:telemetria, :polling, [])}
     ]

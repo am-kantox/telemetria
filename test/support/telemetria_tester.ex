@@ -52,7 +52,7 @@ defmodule Test.Telemetria.Example do
   @telemetria level: :debug
   defp annotated_2(nil), do: 0
 
-  @telemetria level: :warn,
+  @telemetria level: :warning,
               transform: [
                 args: {__MODULE__, :transform_args},
                 result: &__MODULE__.transform_result/1

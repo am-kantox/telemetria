@@ -4,7 +4,7 @@ defmodule Telemetria.Options do
   use Boundary, deps: [], exports: []
 
   @log_levels if Version.match?(System.version(), ">= 1.11.0-dev"),
-                do: ~w|emergency alert critical error warn notice info debug|a,
+                do: ~w|emergency alert critical error warning notice info debug|a,
                 else: ~w|error warn info debug|a
 
   @spec list([any()], [{module(), atom()} | {module(), atom(), [any()]}]) ::

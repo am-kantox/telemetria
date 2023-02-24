@@ -136,7 +136,7 @@ defmodule Telemetria.Handler.Default do
   @spec do_log(level :: Telemetria.Hooks.level(), message :: binary(), env :: Logger.metadata()) ::
           :ok
   if(Version.match?(System.version(), ">= 1.11.0-dev")) do
-    @levels ~w|emergency alert critical error warn notice info debug|a
+    @levels ~w|emergency alert critical error warning notice info debug|a
   else
     @levels ~w|error warn info debug|a
   end
@@ -146,6 +146,9 @@ defmodule Telemetria.Handler.Default do
       do: Logger.unquote(level)(fn -> message end, env)
   end)
 
+  defp do_log(:warn, message, env) when is_binary(message),
+    do: Logger.warning(fn -> message end, env)
+
   defp do_log(level, message, env) when is_binary(message),
-    do: Logger.warn(fn -> "[#{inspect(level)}] " <> message end, env)
+    do: Logger.warning(fn -> "[#{inspect(level)}] " <> message end, env)
 end

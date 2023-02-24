@@ -12,13 +12,13 @@ defmodule Telemetria.Hooks do
     * `:alert` - for alerts, actions that must be taken immediately, ex. corrupted database
     * `:critical` - for critical conditions
     * `:error` - for errors
-    * `:warn` - for warnings
+    * `:warn` | `:warning` - for warnings
     * `:notice` - for normal, but signifant, messages
     * `:info` - for information of any kind
     * `:debug` - for debug-related messages
   """
   if Version.match?(System.version(), ">= 1.11.0-dev") do
-    @type level :: :emergency | :alert | :critical | :error | :warn | :notice | :info | :debug
+    @type level :: :emergency | :alert | :critical | :error | :warning | :notice | :info | :debug
   else
     @type level :: :error | :warn | :info | :debug
   end
@@ -47,6 +47,11 @@ defmodule Telemetria.Hooks do
   purge_level =
     get_in(Application.compile_env(:logger, :compile_time_purge_matching), [:level_lower_than]) ||
       Logger.level()
+
+  purge_level =
+    if purge_level == :warn and Version.match?(System.version(), ">= 1.11.0-dev"),
+      do: :warning,
+      else: purge_level
 
   @purge_level Application.compile_env(:telemetria, :purge_level, purge_level)
 
