@@ -89,7 +89,7 @@ defmodule Telemetria.Options do
       doc: """
       The application-specific events.
 
-      See `:telemetry.event_prefix/0` and `:telemetry.event_name/0`.
+      See `t::telemetry.event_prefix/0` and `t::telemetry.event_name/0`.
       """
     ],
     handler: [
