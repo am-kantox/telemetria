@@ -1,6 +1,4 @@
 defmodule Telemetria do
-  use Boundary, exports: [Hooks, Mix.Events]
-
   @moduledoc """
   `Telemetría` is the opinionated wrapper for [`:telemetry`](https://hexdocs.pm/telemetry)
   providing handy macros to attach telemetry events to any function, private function,
@@ -309,19 +307,17 @@ defmodule Telemetria do
     end
   end
 
+  @warn_missing_compiler Application.compile_env(:telemetria, :warn_missing_compiler, false)
+
   defp report(event, caller) do
     if is_nil(GenServer.whereis(Events)) do
-      Mix.shell().info([
-        [:bright, :green, "[INFO] ", :reset],
-        "Added event: #{inspect(event)} at ",
-        "#{caller.file}:#{caller.line}"
-      ])
-
-      Mix.shell().info([
-        [:bright, :yellow, "[WARN] ", :reset],
-        "Telemetria config won’t be updated! ",
-        "Add `:telemetria` compiler to `compilers:` in your `mix.exs`!"
-      ])
+      if @warn_missing_compiler do
+        Mix.shell().warning([
+          "Added event: #{inspect(event)} at #{caller.file}:#{caller.line}, ",
+          "but `Telemetria` config won’t be updated. `",
+          "Add `:telemetria` compiler to `compilers:` in your `mix.exs`!"
+        ])
+      end
     else
       Events.put(:event, {caller.module, event})
     end

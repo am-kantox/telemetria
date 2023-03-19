@@ -2,7 +2,7 @@ defmodule Telemetria.MixProject do
   use Mix.Project
 
   @app :telemetria
-  @version "0.12.3"
+  @version "0.13.0"
 
   def project do
     [
@@ -40,7 +40,6 @@ defmodule Telemetria.MixProject do
 
   defp deps do
     [
-      {:boundary, "~> 0.4", runtime: false},
       {:telemetry, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
       {:jason, "~> 1.0"},
@@ -99,7 +98,6 @@ defmodule Telemetria.MixProject do
     ]
   end
 
-  def compilers(:dev), do: [:boundary | Mix.compilers()]
   def compilers(_), do: Mix.compilers()
 
   defp elixirc_paths(:test), do: ["lib", "test/support"]

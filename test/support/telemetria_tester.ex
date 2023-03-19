@@ -2,14 +2,11 @@ Application.ensure_started(:telemetry)
 
 defmodule Test.Telemetria.S do
   @moduledoc false
-  use Boundary
   defstruct(foo: 42, bar: :baz)
 end
 
 defmodule Test.Telemetria.Example do
   @moduledoc false
-
-  use Boundary, deps: [Telemetria, Test.Telemetria.S], exports: []
 
   use Telemetria, action: :import
 

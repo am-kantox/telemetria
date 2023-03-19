@@ -7,8 +7,6 @@ defmodule Telemetria.Handler do
   _See:_ `Telemetria.Handler.Default`.
   """
 
-  use Boundary, deps: [], exports: []
-
   @doc "The callback that will be invoked by `:telemetry`"
   @callback handle_event(
               :telemetry.event_name(),

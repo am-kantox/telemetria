@@ -8,8 +8,6 @@ defmodule Telemetria.Handler.Default do
 
   alias Telemetria.Handler
 
-  use Boundary, deps: [Handler], exports: []
-
   require Logger
 
   # credo:disable-for-next-line Credo.Check.Warning.ApplicationConfigInModuleAttribute

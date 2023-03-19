@@ -1,8 +1,6 @@
 defmodule Telemetria.Options do
   @moduledoc false
 
-  use Boundary, deps: [], exports: []
-
   @log_levels if Version.match?(System.version(), ">= 1.11.0-dev"),
                 do: ~w|emergency alert critical error warning notice info debug|a,
                 else: ~w|error warn info debug|a

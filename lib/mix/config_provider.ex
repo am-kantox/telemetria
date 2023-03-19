@@ -1,8 +1,6 @@
 defmodule Telemetria.ConfigProvider do
   @moduledoc false
 
-  use Boundary, deps: [Telemetria.Mix.Events], exports: []
-
   alias Telemetria.Mix.Events
 
   @behaviour Config.Provider

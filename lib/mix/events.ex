@@ -7,8 +7,6 @@ defmodule Telemetria.Mix.Events do
                       Path.join(["config", ".telemetria.config.json"])
                     )
 
-  use Boundary, deps: [], exports: []
-
   use Agent
 
   def start_link,

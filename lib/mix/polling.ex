@@ -1,7 +1,6 @@
 defmodule Telemetria.Polling do
   @moduledoc false
 
-  use Boundary, deps: [Telemetria, Telemetria.Instrumenter], exports: []
   use Supervisor
   require Logger
   alias Telemetria.{Instrumenter, Polling}
