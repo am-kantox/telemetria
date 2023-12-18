@@ -23,6 +23,9 @@ erl_crash.dump
 telemetria-*.tar
 
 /.elixir_ls/
+/.elixir-tools/
+.tool-versions
+
 
 /.dialyzer/plts/*.plt*
 

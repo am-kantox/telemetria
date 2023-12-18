@@ -3,6 +3,8 @@ Application.ensure_started(:telemetry)
 defmodule Test.Telemetria.S do
   @moduledoc false
   defstruct(foo: 42, bar: :baz)
+
+  def allow?(arg), do: tap(true, fn _ -> IO.inspect(arg) end)
 end
 
 defmodule Test.Telemetria.Example do
@@ -56,7 +58,7 @@ defmodule Test.Telemetria.Example do
               ]
   defp annotated_2(i) when (is_integer(i) and i == 42) or is_nil(i), do: i || 42
 
-  @telemetria level: :error
+  @telemetria level: :error, if: &Test.Telemetria.S.allow?/1
   defp annotated_2(i), do: i && :forty_two
 
   @telemetria level: :info

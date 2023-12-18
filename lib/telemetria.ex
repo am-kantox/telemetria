@@ -168,6 +168,10 @@ defmodule Telemetria do
   @spec noop(any()) :: any()
   def noop(arg), do: arg
 
+  @doc false
+  @spec yes(any()) :: true
+  def yes(_arg), do: true
+
   @spec telemetry_prefix(
           Macro.Env.t(),
           {atom(), keyword(), tuple()} | nil | maybe_improper_list()
@@ -270,6 +274,8 @@ defmodule Telemetria do
       {clause_args, context} = Keyword.pop(context, :arguments, [])
       args = Keyword.merge(args, clause_args)
 
+      conditional = Macro.escape(context[:conditional] || &Telemetria.yes/1)
+
       block =
         quote location: :keep, generated: true do
           reference = inspect(make_ref())
@@ -281,22 +287,25 @@ defmodule Telemetria do
           ]
 
           result = unquote(block)
-          benchmark = System.monotonic_time(:microsecond) - now[:monotonic]
 
-          :telemetry.execute(
-            unquote(event),
-            %{
-              reference: reference,
-              system_time: now,
-              consumed: benchmark
-            },
-            %{
-              env: unquote(caller),
-              result: unquote(result_transform).(result),
-              args: unquote(args_transform).(unquote(args)),
-              context: unquote(context)
-            }
-          )
+          if unquote(conditional).(result) do
+            benchmark = System.monotonic_time(:microsecond) - now[:monotonic]
+
+            :telemetry.execute(
+              unquote(event),
+              %{
+                reference: reference,
+                system_time: now,
+                consumed: benchmark
+              },
+              %{
+                env: unquote(caller),
+                result: unquote(result_transform).(result),
+                args: unquote(args_transform).(unquote(args)),
+                context: unquote(context)
+              }
+            )
+          end
 
           result
         end

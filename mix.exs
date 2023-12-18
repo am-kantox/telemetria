@@ -43,7 +43,7 @@ defmodule Telemetria.MixProject do
       {:telemetry, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
       {:jason, "~> 1.0"},
-      {:nimble_options, "~> 0.2"},
+      {:nimble_options, "~> 1.0"},
       # dev / test
       {:dialyxir, "~> 1.0", only: [:dev, :test, :ci], runtime: false},
       {:credo, "~> 1.0", only: [:dev, :ci], runtime: false},

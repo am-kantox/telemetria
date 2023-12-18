@@ -37,9 +37,10 @@ defmodule Telemetria.Hooks do
           args: [ast_tuple()],
           guards: [ast_tuple()],
           body: [{:do, ast_tuple()}],
+          conditional: (any() -> boolean()),
           options: [option()]
         }
-  defstruct ~w|annotation_type env kind fun arity args guards body options|a
+  defstruct ~w|annotation_type env kind fun arity args guards body conditional options|a
 
   @default_level Application.compile_env(:telemetria, :level, Logger.level())
   @strict Application.compile_env(:telemetria, :strict, false)
@@ -60,6 +61,12 @@ defmodule Telemetria.Hooks do
       {options, kind, body} when kind in [:def, :defp] ->
         {type, options} = pop_apply(options, body)
 
+        {conditional, options} =
+          case options do
+            {conditional, options} -> {conditional, options}
+            options -> {nil, options}
+          end
+
         Module.put_attribute(
           env.module,
           :telemetria_hooks,
@@ -72,6 +79,7 @@ defmodule Telemetria.Hooks do
             args: args,
             guards: guards,
             body: body,
+            conditional: conditional,
             options: options
           )
         )
@@ -111,7 +119,7 @@ defmodule Telemetria.Hooks do
 
         body =
           Telemetria.telemetry_wrap(info.body, {info.fun, [line: meta.line], info.args}, meta,
-            options: info.options
+            options: info.options, conditional: info.conditional
           )
 
         {info.kind, [context: Elixir, import: Kernel], [head, body]}
@@ -141,16 +149,18 @@ defmodule Telemetria.Hooks do
       {false, options} ->
         {:none, options}
 
-      {true, options} ->
+      {true_or_fun, options} when true_or_fun == true or is_function(true_or_fun, 1) ->
         allow? =
           options
           |> Keyword.fetch!(:level)
           |> Logger.compare_levels(@purge_level)
 
+        result = if true_or_fun == true, do: options, else: {true_or_fun, options}
+
         case {allow?, body} do
-          {:lt, _} -> {:none, options}
-          {_, nil} -> {:head, options}
-          {_, _} -> {:clause, options}
+          {:lt, _} -> {:none, result}
+          {_, nil} -> {:head, result}
+          {_, _} -> {:clause, result}
         end
 
       {weird, _options} ->

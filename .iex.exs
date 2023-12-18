@@ -21,7 +21,7 @@ IEx.configure(
   default_prompt:
     [
       # cursor ⇒ column 1
-      "\e[G",
+      # "\e[G",
       :blue,
       "%prefix",
       :cyan,
@@ -37,3 +37,5 @@ IEx.configure(
     |> IO.chardata_to_string()
 )
 
+Logger.configure(default_formatter: [metadata: :all, format: {Telemetria.Formatter, :format}])
+Application.put_env(:telemetria, :smart_log, true)

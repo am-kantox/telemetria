@@ -106,28 +106,29 @@ defmodule Telemetria.Handler.Default do
     default_metadata = Logger.metadata()
     type = if match?([_, :vm | _], event), do: :stats, else: :metrics
 
+    metadata =
+      Keyword.merge(default_metadata,
+        telemetría: [
+          otp_app: otp_app,
+          severity: severity,
+          type: type,
+          event: event,
+          name: Enum.join(event, "."),
+          inspect_opts: inspect_opts,
+          config: config,
+          context: options,
+          measurements: measurements,
+          call: metadata |> Map.to_list() |> Keyword.take([:args, :result])
+        ],
+        process_info: process_info
+      )
+
     [
       severity: severity,
-      message: message,
+      message: message <> " → " <> inspect(metadata),
       default_metadata: default_metadata,
       env: env,
-      metadata:
-        default_metadata
-        |> Keyword.merge(
-          telemetría: [
-            otp_app: otp_app,
-            severity: severity,
-            type: type,
-            event: event,
-            name: Enum.join(event, "."),
-            inspect_opts: inspect_opts,
-            config: config,
-            context: options,
-            measurements: measurements,
-            call: metadata |> Map.to_list() |> Keyword.take([:args, :result])
-          ],
-          process_info: process_info
-        )
+      metadata: metadata
     ]
   end
 

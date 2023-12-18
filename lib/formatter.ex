@@ -8,8 +8,7 @@ defmodule Telemetria.Formatter do
   @doc """
   Formats a log entry.
   """
-  @spec format(Logger.level(), Logger.message(), Logger.Formatter.time(), Logger.metadata()) ::
-          iodata()
+  @spec format(atom(), IO.chardata(), Logger.Formatter.date_time_ms(), keyword()) :: IO.chardata()
   def format(level, message, timestamp, metadata) do
     {telemetria, metadata} = Keyword.pop(metadata, :telemetría, [])
     {process_info, metadata} = Keyword.pop(metadata, :process_info, [])
