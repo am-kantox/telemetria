@@ -20,6 +20,11 @@ end
 
 ## Changelog
 
+- **`0.14.0`** —
+  - [ENH] Allow `if: runtime_function` in `@telemetria` attribute in the form `&Mod.fun/1`,
+    which will receive the result _and_ emit the telemetry event if it returns `true`
+- **`0.13.0`** —
+  - [ENH] Allow `if: compile_time_boolean` in `@telemetria` attribute
 - **`0.12.0`** —
   - [ENH] Allow `[transform: [args: M.f/1, result: {M, :f}]]` coercers in `@telemetria` attribute
 - **`0.11.1`** —
