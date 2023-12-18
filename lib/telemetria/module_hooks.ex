@@ -59,13 +59,7 @@ defmodule Telemetria.Hooks do
   def __on_definition__(env, kind, fun, args, guards, body) do
     case {Module.get_attribute(env.module, :telemetria), kind, body} do
       {options, kind, body} when kind in [:def, :defp] ->
-        {type, options} = pop_apply(options, body)
-
-        {conditional, options} =
-          case options do
-            {conditional, options} -> {conditional, options}
-            options -> {nil, options}
-          end
+        {type, {conditional, options}} = pop_apply(options, body)
 
         Module.put_attribute(
           env.module,
@@ -119,7 +113,8 @@ defmodule Telemetria.Hooks do
 
         body =
           Telemetria.telemetry_wrap(info.body, {info.fun, [line: meta.line], info.args}, meta,
-            options: info.options, conditional: info.conditional
+            options: info.options,
+            conditional: info.conditional
           )
 
         {info.kind, [context: Elixir, import: Kernel], [head, body]}
@@ -136,7 +131,7 @@ defmodule Telemetria.Hooks do
     do: {:when, [context: Elixir], [{f, meta, args} | guards]}
 
   @spec pop_apply([{:if, boolean()} | option()] | boolean() | nil, Macro.t()) ::
-          {annotation_type(), [option()]}
+          {annotation_type(), {(any() -> boolean()) | nil, [option()]}} | no_return()
   defp pop_apply(nil, body), do: pop_apply(false, body)
   defp pop_apply(false, body), do: pop_apply([if: false], body)
   defp pop_apply(true, body), do: pop_apply([if: true], body)
@@ -147,7 +142,7 @@ defmodule Telemetria.Hooks do
     |> Keyword.pop(:if, not @strict)
     |> case do
       {false, options} ->
-        {:none, options}
+        {:none, {nil, options}}
 
       {true_or_fun, options} when true_or_fun == true or is_function(true_or_fun, 1) ->
         allow? =
@@ -155,7 +150,7 @@ defmodule Telemetria.Hooks do
           |> Keyword.fetch!(:level)
           |> Logger.compare_levels(@purge_level)
 
-        result = if true_or_fun == true, do: options, else: {true_or_fun, options}
+        result = if true_or_fun == true, do: {nil, options}, else: {true_or_fun, options}
 
         case {allow?, body} do
           {:lt, _} -> {:none, result}

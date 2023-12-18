@@ -274,7 +274,7 @@ defmodule Telemetria do
       {clause_args, context} = Keyword.pop(context, :arguments, [])
       args = Keyword.merge(args, clause_args)
 
-      conditional = Macro.escape(context[:conditional] || &Telemetria.yes/1)
+      conditional = Macro.escape(context[:conditional] || (&Telemetria.yes/1))
 
       block =
         quote location: :keep, generated: true do
