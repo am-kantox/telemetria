@@ -18,6 +18,11 @@ defmodule Telemetria.Formatter do
     {type, telemetria} = Keyword.pop(telemetria, :type, :log)
     {severity, telemetria} = Keyword.pop(telemetria, :severity, level)
 
+    inspect_opts =
+      inspect_opts
+      |> Keyword.put_new(:custom_options, [])
+      |> put_in(~w|custom_options from|a, :telemetria)
+
     payload =
       ([
          "@id": otp_app,

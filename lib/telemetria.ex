@@ -278,8 +278,6 @@ defmodule Telemetria do
 
       block =
         quote location: :keep, generated: true do
-          reference = inspect(make_ref())
-
           now = [
             system: System.system_time(),
             monotonic: System.monotonic_time(:microsecond),
@@ -294,7 +292,6 @@ defmodule Telemetria do
             :telemetry.execute(
               unquote(event),
               %{
-                reference: reference,
                 system_time: now,
                 consumed: benchmark
               },

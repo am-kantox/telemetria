@@ -5,10 +5,10 @@ defmodule Telemetria.FormatterTest do
 
   # @moduletag :skip
 
-  setup_all do
-    Logger.configure(default_formatter: [metadata: :all, format: {Telemetria.Formatter, :format}])
-    Application.put_env(:telemetria, :smart_log, true)
-  end
+  # setup_all do
+  #   Logger.configure(default_formatter: [metadata: :all, format: {Telemetria.Formatter, :format}])
+  #   Application.put_env(:telemetria, :smart_log, true)
+  # end
 
   test "attaches telemetry events to module functions and spits out logs" do
     log =

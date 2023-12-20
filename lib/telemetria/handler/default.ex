@@ -12,7 +12,9 @@ defmodule Telemetria.Handler.Default do
 
   # credo:disable-for-next-line Credo.Check.Warning.ApplicationConfigInModuleAttribute
   @logger_formatter Application.get_all_env(:logger)
-                    |> Enum.map(fn {_, v} -> if Keyword.keyword?(v), do: v[:format] end)
+                    |> Enum.map(fn {_, v} ->
+                      if Keyword.keyword?(v), do: v[:default_formatter] || v[:format]
+                    end)
                     |> Enum.reject(&is_nil/1)
                     |> Enum.uniq()
                     |> Kernel.==([{Telemetria.Formatter, :format}])
@@ -61,7 +63,11 @@ defmodule Telemetria.Handler.Default do
     metadata = build_metadata(event, measurements, metadata, config)
 
     maybe_log metadata[:severity] do
-      do_log(metadata[:severity], inspect(metadata[:metadata]), metadata[:env])
+      do_log(
+        metadata[:severity],
+        inspect(metadata[:metadata], custom_options: [from: :telemetria]),
+        metadata[:env]
+      )
     end
   end
 
@@ -123,9 +129,11 @@ defmodule Telemetria.Handler.Default do
         process_info: process_info
       )
 
+    inspected_metadata = inspect(metadata, custom_options: [from: :telemetria])
+
     [
       severity: severity,
-      message: message <> " → " <> inspect(metadata),
+      message: message <> " → " <> inspected_metadata,
       default_metadata: default_metadata,
       env: env,
       metadata: metadata

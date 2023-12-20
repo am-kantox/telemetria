@@ -16,3 +16,7 @@ config :telemetria,
     [:test, :telemetria, :example, :annotated_3],
     [:test, :telemetria, :example, :check_s]
   ]
+
+# config :logger, :default_formatter,
+#   format: {Telemetria.Formatter, :format},
+#   metadata: :all
