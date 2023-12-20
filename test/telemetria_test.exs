@@ -111,6 +111,50 @@ defmodule Telemetria.Test do
     assert log =~ ~s|call: [args: [i: "42"], result: :forty_two]|
   end
 
+  test "@telemetry if: runtime (true)" do
+    :persistent_term.put(Test.Telemetria.S, :forty_two)
+
+    log =
+      capture_log(fn ->
+        assert 0 == Example.annotated_1(nil)
+        assert :forty_two == Example.annotated_1("42")
+        assert 42 == Example.annotated_1(42)
+        Process.sleep(100)
+      end)
+
+    assert log =~ "event: [:test, :telemetria, :example, :annotated_1]"
+    assert log =~ "event: [:test, :telemetria, :example, :annotated_2]"
+    refute log =~ "[debug]"
+    assert log =~ "[info]"
+    assert log =~ ~s|call: [args: [foo: 42], result: 42]|
+    assert log =~ "[warning]"
+    assert log =~ ~s|call: [args: "[i: 42]", result: "42"]|
+    assert log =~ "[error]"
+    assert log =~ ~s|call: [args: [i: "42"], result: :forty_two]|
+  end
+
+  test "@telemetry if: runtime (false)" do
+    :persistent_term.put(Test.Telemetria.S, :not_forty_two)
+
+    log =
+      capture_log(fn ->
+        assert 0 == Example.annotated_1(nil)
+        assert :forty_two == Example.annotated_1("42")
+        assert 42 == Example.annotated_1(42)
+        Process.sleep(100)
+      end)
+
+    assert log =~ "event: [:test, :telemetria, :example, :annotated_1]"
+    assert log =~ "event: [:test, :telemetria, :example, :annotated_2]"
+    refute log =~ "[debug]"
+    assert log =~ "[info]"
+    assert log =~ ~s|call: [args: [foo: 42], result: 42]|
+    assert log =~ "[warning]"
+    assert log =~ ~s|call: [args: "[i: 42]", result: "42"]|
+    refute log =~ "[error]"
+    refute log =~ ~s|call: [args: [i: "42"], result: :forty_two]|
+  end
+
   test "@telemetry deep pattern match" do
     log =
       capture_log(fn ->

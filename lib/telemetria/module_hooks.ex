@@ -37,7 +37,7 @@ defmodule Telemetria.Hooks do
           args: [ast_tuple()],
           guards: [ast_tuple()],
           body: [{:do, ast_tuple()}],
-          conditional: (any() -> boolean()),
+          conditional: (any() -> boolean()) | nil,
           options: [option()]
         }
   defstruct ~w|annotation_type env kind fun arity args guards body conditional options|a

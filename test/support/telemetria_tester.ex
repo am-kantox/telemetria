@@ -4,7 +4,7 @@ defmodule Test.Telemetria.S do
   @moduledoc false
   defstruct(foo: 42, bar: :baz)
 
-  def allow?(arg), do: arg == :forty_two
+  def allow?(arg), do: arg == :persistent_term.get(__MODULE__, :forty_two)
 end
 
 defmodule Test.Telemetria.Example do
