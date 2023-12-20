@@ -20,6 +20,8 @@ end
 
 ## Changelog
 
+- **`0.14.1`** —
+  - [ENH] Propagate `custom_options: [from: :telemetria]` down to inspect
 - **`0.14.0`** —
   - [ENH] Allow `if: runtime_function` in `@telemetria` attribute in the form `&Mod.fun/1`,
     which will receive the result _and_ emit the telemetry event if it returns `true`
