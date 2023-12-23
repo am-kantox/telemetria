@@ -115,6 +115,11 @@ defmodule Telemetria.Options do
           default: 5_000
         ]
       ]
+    ],
+    process_info: [
+      type: :boolean,
+      doc: "Specifies whether each telemetry event should include process info.",
+      default: false
     ]
   ]
 

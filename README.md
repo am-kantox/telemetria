@@ -20,6 +20,8 @@ end
 
 ## Changelog
 
+- **`0.14.2`** —
+  - [ENH] `process_info: boolean()` option to embed the process info into each telemtry event 
 - **`0.14.1`** —
   - [ENH] Propagate `custom_options: [from: :telemetria]` down to inspect
 - **`0.14.0`** —
