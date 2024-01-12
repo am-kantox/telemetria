@@ -20,6 +20,8 @@ end
 
 ## Changelog
 
+- **`0.15.0`** —
+  - [UPD] Elixir v1.16
 - **`0.14.2`** —
   - [ENH] `process_info: boolean()` option to embed the process info into each telemtry event 
 - **`0.14.1`** —
