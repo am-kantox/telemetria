@@ -97,7 +97,7 @@ defmodule Telemetria.Test do
         assert 0 == Example.annotated_1(nil)
         assert :forty_two == Example.annotated_1("42")
         assert 42 == Example.annotated_1(42)
-        Process.sleep(200)
+        Process.sleep(500)
       end)
 
     assert log =~ "event: [:test, :telemetria, :example, :annotated_1]"
