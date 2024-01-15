@@ -16,11 +16,11 @@ jobs:
               otp: 26.2
               elixir: 1.16
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: erlef/setup-elixir@v1
         with:
-          otp-version: ${{matrix.otp}}
-          elixir-version: ${{matrix.elixir}}
+          otp-version: ${{matrix.pair.otp}}
+          elixir-version: ${{matrix.pair.elixir}}
       - name: Install → Compile dependencies
         run: |
           MIX_ENV=test mix deps.get
