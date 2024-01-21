@@ -197,12 +197,12 @@ defmodule Telemetria.Hooks do
     import Inspect.Algebra
 
     def inspect(hook, opts) do
-      args = hook.args |> Macro.to_string() |> String.slice(1..-2)
+      args = hook.args |> Macro.to_string() |> String.slice(1..-2//1)
 
       guards =
         hook.guards
         |> Macro.to_string()
-        |> String.slice(1..-2)
+        |> String.slice(1..-2//1)
         |> case do
           "" -> ""
           other -> " when " <> other
