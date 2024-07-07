@@ -15,7 +15,8 @@ config :telemetria,
     [:test, :telemetria, :example, :annotated_2],
     [:test, :telemetria, :example, :annotated_3],
     [:test, :telemetria, :example, :check_s]
-  ]
+  ],
+  throttle: %{some_group: {1_000, :last}}
 
 # config :logger, :default_formatter,
 #   format: {Telemetria.Formatter, :format},

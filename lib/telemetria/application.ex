@@ -13,11 +13,22 @@ defmodule Telemetria.Application do
     io_args =
       if Version.match?(System.version(), ">= 1.15.0-dev"), do: {self(), "", []}, else: {"", []}
 
+    throttler_args =
+      :telemetria
+      |> Application.fetch_env!(:throttle)
+      |> case do
+        :none -> %{}
+        {interval, kind} -> %{default: {interval, kind}}
+        %{} = map -> map
+      end
+      |> Map.put_new(:default, {0, :none})
+
     children = [
       %{
         id: Telemetria.Buffer,
         start: {GenServer, :start_link, [StringIO, io_args, [name: Telemetria.Buffer]]}
       },
+      {Telemetria.Throttler, throttler_args},
       {Telemetria.Polling, Application.get_env(:telemetria, :polling, [])}
     ]
 

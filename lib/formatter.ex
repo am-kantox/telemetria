@@ -13,7 +13,7 @@ defmodule Telemetria.Formatter do
     {telemetria, metadata} = Keyword.pop(metadata, :telemetría, [])
     {process_info, metadata} = Keyword.pop(metadata, :process_info, [])
 
-    {otp_app, telemetria} = Keyword.pop(telemetria, :otp_app, :unknown)
+    {otp_app, telemetria} = Keyword.pop_lazy(telemetria, :otp_app, &Telemetria.otp_app/0)
     {inspect_opts, telemetria} = Keyword.pop(telemetria, :inspect_opts, [])
     {type, telemetria} = Keyword.pop(telemetria, :type, :log)
     {severity, telemetria} = Keyword.pop(telemetria, :severity, level)

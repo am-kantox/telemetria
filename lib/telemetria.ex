@@ -16,6 +16,20 @@ defmodule Telemetria do
   a compiler that is responsible for incremental builds and updates of the list of
   events telemetry is aware about.
 
+  ## Using module attribute
+
+  Besides the functions listed above, one might attach `Telemetría` to the function
+  by annotating it with `@telemetria` module attribute.
+
+  There are several options to pass to this attribute:
+
+  - **`true`** — attach the `telemetry` to the function
+  - **`if: boolean()`** — compile-time condition
+  - **`if: (result -> boolean())`** — runtime condition
+  - **`level: Logger,level()`** — specify a min logger level to attach telemetry
+  - **`group: atom()`** — the configured group to manage event throttling,
+    see `:throttle` setting in `Telemetria.Options`
+
   ## Advantages
 
   `Telemetría` takes care about managing events in the target application,
@@ -165,6 +179,19 @@ defmodule Telemetria do
   end
 
   @doc false
+  @spec otp_app :: atom()
+  def otp_app do
+    Application.get_env(
+      :telemetria,
+      :otp_app,
+      case :application.get_application(self()) do
+        {:ok, otp_app} -> otp_app
+        _ -> :unknown
+      end
+    )
+  end
+
+  @doc false
   @spec noop(any()) :: any()
   def noop(arg), do: arg
 
@@ -265,6 +292,8 @@ defmodule Telemetria do
                 "transform must be a tuple `{mod, fun}` or a function capture, #{inspect(weird)} given"
       end
 
+      group = get_in(context, [:options, :group])
+
       args_transform =
         context |> get_in([:options, :transform, :args]) |> fix_fun.() |> Macro.escape()
 
@@ -289,7 +318,7 @@ defmodule Telemetria do
           if unquote(conditional).(result) do
             benchmark = System.monotonic_time(:microsecond) - now[:monotonic]
 
-            :telemetry.execute(
+            Telemetria.Throttler.execute(unquote(group), {
               unquote(event),
               %{
                 system_time: now,
@@ -301,7 +330,7 @@ defmodule Telemetria do
                 args: unquote(args_transform).(unquote(args)),
                 context: unquote(context)
               }
-            )
+            })
           end
 
           result

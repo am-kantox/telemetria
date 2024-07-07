@@ -22,12 +22,7 @@ defmodule Telemetria.Instrumenter do
 
   @spec otp_app :: atom()
   def otp_app,
-    do:
-      Keyword.get(
-        json_config(),
-        :otp_app,
-        Application.get_env(:telemetria, :otp_app, :telemetria)
-      )
+    do: Keyword.get_lazy(json_config(), :otp_app, &Telemetria.otp_app/0)
 
   @spec polling? :: boolean()
   def polling?,

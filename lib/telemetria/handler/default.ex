@@ -99,16 +99,7 @@ defmodule Telemetria.Handler.Default do
     {process_info?, options} = Keyword.pop(options, :process_info, @default_process_info)
     process_info = if process_info?, do: Telemetria.Handler.process_info(), else: []
 
-    otp_app =
-      Application.get_env(
-        :telemetria,
-        :otp_app,
-        case :application.get_application(self()) do
-          {:ok, otp_app} -> otp_app
-          _ -> :unknown
-        end
-      )
-
+    otp_app = Telemetria.otp_app()
     default_metadata = Logger.metadata()
     type = if match?([_, :vm | _], event), do: :stats, else: :metrics
 

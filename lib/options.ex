@@ -59,6 +59,17 @@ defmodule Telemetria.Options do
         "Telemetria level to purge beyond, as in [Logger](https://hexdocs.pm/logger/Logger.html#module-application-configuration)",
       default: :debug
     ],
+    throttle: [
+      type:
+        {:or,
+         [
+           {:or, [{:in, [:none]}, {:tuple, [:non_neg_integer, {:in, [:last, :all]}]}]},
+           {:map, :atom,
+            {:or, [{:in, [:none]}, {:tuple, [:non_neg_integer, {:in, [:last, :all]}]}]}}
+         ]},
+      doc: "The throttling mechanism for throttling through too many events",
+      default: :none
+    ],
     strict: [
       type: :boolean,
       doc: "Ignore `@telemetria` tags without `if` clause",

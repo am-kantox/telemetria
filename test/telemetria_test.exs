@@ -173,10 +173,11 @@ defmodule Telemetria.Test do
         assert 0 == Example.annotated_3(nil)
         assert 42 == Example.annotated_3("42")
         assert 42 == Example.annotated_3(42)
-        Process.sleep(100)
+        Process.sleep(1_100)
       end)
 
     assert log =~ "[:test, :telemetria, :example, :annotated_3]"
     assert log =~ "result: 42"
+    assert [[_]] = Regex.scan(~r/telemetría:/, log)
   end
 end
