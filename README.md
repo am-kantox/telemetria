@@ -20,6 +20,8 @@ end
 
 ## Changelog
 
+- **`0.17.0`** —
+  - [UPD] Configurable throttling groups
 - **`0.16.0`** —
   - [UPD] Elixir v1.17
 - **`0.15.0`** —
