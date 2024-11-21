@@ -104,11 +104,11 @@ defmodule Telemetria.Test do
     assert log =~ "event: [:test, :telemetria, :example, :annotated_2]"
     refute log =~ "[debug]"
     assert log =~ "[info]"
-    assert log =~ ~s|call: [args: [foo: 42], result: 42]|
+    assert log =~ ~s|call: [args: [foo: 42], locals: [], result: 42]|
     assert log =~ "[warning]"
-    assert log =~ ~s|call: [args: "[i: 42]", result: "42"]|
+    assert log =~ ~s|call: [args: "[i: 42]", locals: [], result: "42"]|
     assert log =~ "[error]"
-    assert log =~ ~s|call: [args: [i: "42"], result: :forty_two]|
+    assert log =~ ~s|call: [args: [i: "42"], locals: [], result: :forty_two]|
   end
 
   test "@telemetry if: runtime (true)" do
@@ -126,11 +126,11 @@ defmodule Telemetria.Test do
     assert log =~ "event: [:test, :telemetria, :example, :annotated_2]"
     refute log =~ "[debug]"
     assert log =~ "[info]"
-    assert log =~ ~s|call: [args: [foo: 42], result: 42]|
+    assert log =~ ~s|call: [args: [foo: 42], locals: [], result: 42]|
     assert log =~ "[warning]"
-    assert log =~ ~s|call: [args: "[i: 42]", result: "42"]|
+    assert log =~ ~s|call: [args: "[i: 42]", locals: [], result: "42"]|
     assert log =~ "[error]"
-    assert log =~ ~s|call: [args: [i: "42"], result: :forty_two]|
+    assert log =~ ~s|call: [args: [i: "42"], locals: [], result: :forty_two]|
   end
 
   test "@telemetry if: runtime (false)" do
@@ -148,11 +148,11 @@ defmodule Telemetria.Test do
     assert log =~ "event: [:test, :telemetria, :example, :annotated_2]"
     refute log =~ "[debug]"
     assert log =~ "[info]"
-    assert log =~ ~s|call: [args: [foo: 42], result: 42]|
+    assert log =~ ~s|call: [args: [foo: 42], locals: [], result: 42]|
     assert log =~ "[warning]"
-    assert log =~ ~s|call: [args: "[i: 42]", result: "42"]|
+    assert log =~ ~s|call: [args: "[i: 42]", locals: [], result: "42"]|
     refute log =~ "[error]"
-    refute log =~ ~s|call: [args: [i: "42"], result: :forty_two]|
+    refute log =~ ~s|call: [args: [i: "42"], locals: [], result: :forty_two]|
   end
 
   test "@telemetry deep pattern match" do
@@ -177,6 +177,7 @@ defmodule Telemetria.Test do
       end)
 
     assert log =~ "[:test, :telemetria, :example, :annotated_3]"
+    assert log =~ "locals: [i: 42]"
     assert log =~ "result: 42"
     assert [[_]] = Regex.scan(~r/telemetría:/, log)
   end

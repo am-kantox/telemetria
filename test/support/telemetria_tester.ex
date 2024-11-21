@@ -61,7 +61,7 @@ defmodule Test.Telemetria.Example do
   @telemetria level: :error, if: &Test.Telemetria.S.allow?/1
   defp annotated_2(i), do: i && :forty_two
 
-  @telemetria level: :info, group: :some_group
+  @telemetria level: :info, group: :some_group, locals: [:i]
   def annotated_3(i \\ nil)
   def annotated_3(nil), do: 0
   def annotated_3(i) when is_binary(i), do: String.to_integer(i)
