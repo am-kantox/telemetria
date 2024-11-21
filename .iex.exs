@@ -4,7 +4,7 @@ if File.exists?(global_settings), do: Code.require_file(global_settings)
 Application.put_env(:elixir, :ansi_enabled, true)
 
 IEx.configure(
-  inspect: [limit: :infinity],
+  # inspect: [limit: :infinity],
   colors: [
     eval_result: [:cyan, :bright],
     eval_error: [[:red, :bright, "\n▶▶▶\n"]],
@@ -20,8 +20,6 @@ IEx.configure(
   ],
   default_prompt:
     [
-      # cursor ⇒ column 1
-      # "\e[G",
       :blue,
       "%prefix",
       :cyan,
