@@ -29,6 +29,25 @@ defmodule Telemetria do
   - **`level: Logger,level()`** — specify a min logger level to attach telemetry
   - **`group: atom()`** — the configured group to manage event throttling,
     see `:throttle` setting in `Telemetria.Options`
+  - **`locals: [atom()]`** — the list of names of local variables to be exported
+    to the telemetry call
+
+  ## Example
+
+  The following code would emit the telemetry event for the function `weather`,
+    returning `result` in Celcius _and_ injecting `farenheit` value under `locals`
+
+  ```elixir
+  defmodule Forecast do
+    use Telemetria
+
+    @telemetria level: :info, group: :weather_reports, locals: [:farenheit]
+    def weather(city) do
+      farenheit = ExternalService.retrieve(city)
+      Converter.farenheit_to_celcius(farenheit)
+    end
+  end
+  ```
 
   ## Advantages
 
@@ -300,6 +319,9 @@ defmodule Telemetria do
       result_transform =
         context |> get_in([:options, :transform, :result]) |> fix_fun.() |> Macro.escape()
 
+      locals =
+        context |> get_in([:options, :locals]) |> Kernel.||([])
+
       {clause_args, context} = Keyword.pop(context, :arguments, [])
       args = Keyword.merge(args, clause_args)
 
@@ -326,6 +348,7 @@ defmodule Telemetria do
               },
               %{
                 env: unquote(caller),
+                locals: Keyword.take(binding(), unquote(locals)),
                 result: unquote(result_transform).(result),
                 args: unquote(args_transform).(unquote(args)),
                 context: unquote(context)

@@ -115,7 +115,7 @@ defmodule Telemetria.Handler.Default do
           config: config,
           context: options,
           measurements: measurements,
-          call: metadata |> Map.to_list() |> Keyword.take([:args, :result])
+          call: metadata |> Map.to_list() |> Keyword.take([:args, :result, :locals])
         ],
         process_info: process_info
       )
