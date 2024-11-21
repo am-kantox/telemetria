@@ -104,11 +104,11 @@ defmodule Telemetria.Test do
     assert log =~ "event: [:test, :telemetria, :example, :annotated_2]"
     refute log =~ "[debug]"
     assert log =~ "[info]"
-    assert log =~ ~s|call: [args: [foo: 42], locals: [], result: 42]|
+    assert log =~ ~s|call: [args: [foo: 42], result: 42, locals: []]|
     assert log =~ "[warning]"
-    assert log =~ ~s|call: [args: "[i: 42]", locals: [], result: "42"]|
+    assert log =~ ~s|call: [args: "[i: 42]", result: "42", locals: []]|
     assert log =~ "[error]"
-    assert log =~ ~s|call: [args: [i: "42"], locals: [], result: :forty_two]|
+    assert log =~ ~s|call: [args: [i: "42"], result: :forty_two, locals: []]|
   end
 
   test "@telemetry if: runtime (true)" do
@@ -126,11 +126,11 @@ defmodule Telemetria.Test do
     assert log =~ "event: [:test, :telemetria, :example, :annotated_2]"
     refute log =~ "[debug]"
     assert log =~ "[info]"
-    assert log =~ ~s|call: [args: [foo: 42], locals: [], result: 42]|
+    assert log =~ ~s|call: [args: [foo: 42], result: 42, locals: []]|
     assert log =~ "[warning]"
-    assert log =~ ~s|call: [args: "[i: 42]", locals: [], result: "42"]|
+    assert log =~ ~s|call: [args: "[i: 42]", result: "42", locals: []]|
     assert log =~ "[error]"
-    assert log =~ ~s|call: [args: [i: "42"], locals: [], result: :forty_two]|
+    assert log =~ ~s|call: [args: [i: "42"], result: :forty_two, locals: []]|
   end
 
   test "@telemetry if: runtime (false)" do
@@ -148,11 +148,11 @@ defmodule Telemetria.Test do
     assert log =~ "event: [:test, :telemetria, :example, :annotated_2]"
     refute log =~ "[debug]"
     assert log =~ "[info]"
-    assert log =~ ~s|call: [args: [foo: 42], locals: [], result: 42]|
+    assert log =~ ~s|call: [args: [foo: 42], result: 42, locals: []]|
     assert log =~ "[warning]"
-    assert log =~ ~s|call: [args: "[i: 42]", locals: [], result: "42"]|
+    assert log =~ ~s|call: [args: "[i: 42]", result: "42", locals: []]|
     refute log =~ "[error]"
-    refute log =~ ~s|call: [args: [i: "42"], locals: [], result: :forty_two]|
+    refute log =~ ~s|call: [args: [i: "42"], result: :forty_two, locals: []]|
   end
 
   test "@telemetry deep pattern match" do
