@@ -1,7 +1,9 @@
 defmodule Telemetria do
   @moduledoc """
   `Telemetría` is the opinionated wrapper for [`:telemetry`](https://hexdocs.pm/telemetry)
-  providing handy macros to attach telemetry events to any function, private function,
+  (started with `v0.19.0` it became agnostic to the actual telemetry backend and supports
+  `OpenTelemetry` out of the box, allowing for more custom implementations of the said backend.)
+  It provides handy macros to attach telemetry events to any function, private function,
   anonymous functions (on per-clause basis) and just random set of expressions.
 
   `Telemetría` exports three macros:
@@ -120,6 +122,13 @@ defmodule Telemetria do
   """
 
   alias Telemetria.{Backend, Mix.Events}
+
+  @type event_name :: [atom(), ...] | String.t()
+  @type event_measurements :: map()
+  @type event_metadata :: map()
+  @type event_value :: number()
+  @type event_prefix :: [atom()]
+  @type handler_config :: term()
 
   @doc false
   defmacro __using__(opts) do

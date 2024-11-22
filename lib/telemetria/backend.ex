@@ -5,7 +5,7 @@ defmodule Telemetria.Backend do
   """
 
   @typedoc "The type used for naming blocks / events"
-  @type block_id :: [atom(), ...] | String.t()
+  @type block_id :: Telemetria.event_name()
 
   @typedoc """
   The context of the currently processing block.
@@ -26,7 +26,7 @@ defmodule Telemetria.Backend do
   @doc "The implementation will be called when the block context is to be updated"
   @callback update(block_context(), block_metadata()) :: block_context()
 
-  @implementation Application.compile_env(:telemetria, :backend, Telemetria.Backend.Telemetry)
+  @implementation Telemetria.Application.backend()
 
   case @implementation do
     module when is_atom(module) ->

@@ -1,5 +1,3 @@
-Application.ensure_started(:telemetry)
-
 defmodule Test.Telemetria.S do
   @moduledoc false
   defstruct(foo: 42, bar: :baz)

@@ -1,5 +1,5 @@
-case Code.ensure_compiled(OpenTelemetry) do
-  {:module, OpenTelemetry} ->
+case {Telemetria.Application.open_telemetry?(), Code.ensure_compiled(OpenTelemetry)} do
+  {true, {:module, OpenTelemetry}} ->
     defmodule Telemetria.Backend.OpenTelemetry do
       @moduledoc """
       The implementation of `Telemetria.Backend` for `OpenTelemetry`.

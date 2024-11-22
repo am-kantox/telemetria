@@ -44,10 +44,10 @@ defmodule Telemetria.Handler.Default do
 
   @spec do_handle_event(
           boolean(),
-          :telemetry.event_name(),
-          :telemetry.event_measurements(),
-          :telemetry.event_metadata(),
-          :telemetry.handler_config()
+          Telemetria.event_name(),
+          Telemetria.event_measurements(),
+          Telemetria.event_metadata(),
+          Telemetria.handler_config()
         ) :: :ok
   defp do_handle_event(true, event, measurements, metadata, config) do
     metadata = build_metadata(event, measurements, metadata, config)
@@ -72,10 +72,10 @@ defmodule Telemetria.Handler.Default do
   end
 
   @spec build_metadata(
-          :telemetry.event_name(),
-          :telemetry.event_measurements(),
-          :telemetry.event_metadata(),
-          :telemetry.handler_config()
+          Telemetria.event_name(),
+          Telemetria.event_measurements(),
+          Telemetria.event_metadata(),
+          Telemetria.handler_config()
         ) :: [{:severity, atom()}, {:metadata, keyword()}]
   defp build_metadata(event, measurements, metadata, config) do
     {options, metadata} = pop_in(metadata, [:context, :options])
