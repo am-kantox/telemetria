@@ -119,7 +119,7 @@ defmodule Telemetria do
   #{NimbleOptions.docs(Telemetria.Options.schema())}
   """
 
-  alias Telemetria.Mix.Events
+  alias Telemetria.{Backend, Mix.Events}
 
   @doc false
   defmacro __using__(opts) do
@@ -335,25 +335,27 @@ defmodule Telemetria do
             utc: DateTime.utc_now()
           ]
 
+          block_ctx = Backend.entry(unquote(event))
+
           result = unquote(block)
 
           if unquote(conditional).(result) do
             benchmark = System.monotonic_time(:microsecond) - now[:monotonic]
 
-            Telemetria.Throttler.execute(unquote(group), {
-              unquote(event),
-              %{
-                system_time: now,
-                consumed: benchmark
-              },
-              %{
-                env: unquote(caller),
-                locals: Keyword.take(binding(), unquote(locals)),
-                result: unquote(result_transform).(result),
-                args: unquote(args_transform).(unquote(args)),
-                context: unquote(context)
-              }
-            })
+            attributes = %{
+              env: unquote(caller),
+              locals: Keyword.take(binding(), unquote(locals)),
+              result: unquote(result_transform).(result),
+              args: unquote(args_transform).(unquote(args)),
+              context: unquote(context)
+            }
+
+            Backend.update(unquote(event), %{timestamp: now[:utc]})
+
+            Telemetria.Throttler.execute(
+              unquote(group),
+              {block_ctx, %{system_time: now, consumed: benchmark}, attributes}
+            )
           end
 
           result

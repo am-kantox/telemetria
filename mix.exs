@@ -40,8 +40,9 @@ defmodule Telemetria.MixProject do
 
   defp deps do
     [
-      {:telemetry, "~> 1.0"},
-      {:telemetry_poller, "~> 1.0"},
+      {:telemetry, "~> 1.0", optional: true},
+      {:telemetry_poller, "~> 1.0", optional: true},
+      {:opentelemetry_api, "~> 1.4", optional: true},
       {:jason, "~> 1.0"},
       {:nimble_options, "~> 1.0"},
       # dev / test
