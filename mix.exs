@@ -31,10 +31,10 @@ defmodule Telemetria.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger, :telemetry],
+      extra_applications: [:logger],
       mod: {Telemetria.Application, []},
       start_phases: [{:telemetry_setup, []}],
-      registered: [Telemetria, Telemetria.Application, Telemetria.Instrumenter]
+      registered: [Telemetria, Telemetria.Application]
     ]
   end
 
