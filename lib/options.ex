@@ -47,6 +47,11 @@ defmodule Telemetria.Options do
       doc: "Specifies whether telemetry should be enabled.",
       default: true
     ],
+    backend: [
+      type: :atom,
+      doc: "The backend to be used as an actual implementation",
+      default: Telemetria.Backend.Telemetry
+    ],
     level: [
       type: {:custom, Telemetria.Options, :log_level, []},
       doc:

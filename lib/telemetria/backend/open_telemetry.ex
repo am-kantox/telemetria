@@ -12,25 +12,39 @@ case {Telemetria.Application.open_telemetry?(), Code.ensure_compiled(OpenTelemet
       @behaviour Telemetria.Backend
 
       @impl true
-      def entry(block_id), do: Tracer.start_span(block_id)
+      def entry(block_id) do
+        OpenTelemetry.Ctx.get_current()
+        |> OpenTelemetry.Ctx.attach()
+
+        block_id
+        |> fix_block_id()
+        |> Tracer.start_span()
+        |> tap(&Tracer.set_current_span/1)
+      end
 
       @impl true
-      def update(block_id, updates) when is_list(block_id),
-        do: block_id |> Enum.join(".") |> update(updates)
-
       def update(block_id, %{} = updates),
         do: update(block_id, Map.to_list(updates))
 
       def update(block_id, updates) when is_list(updates) do
-        event = OpenTelemetry.event(block_id, updates)
+        event_id = Enum.join([fix_block_id(block_id), "@", System.monotonic_time()])
+        event = OpenTelemetry.event(event_id, updates)
         Tracer.add_events([event])
       end
 
       @impl true
-      def return(block_id, context) do
-        Span.set_attributes(block_id, context)
-        Span.end_span(block_id)
+      def return(block_ctx, context) do
+        attributes = Estructura.Flattenable.flatten(context)
+
+        Span.set_attributes(block_ctx, attributes)
+        Span.end_span(block_ctx)
+        OpenTelemetry.Ctx.detach(block_ctx)
+
+        :ok
       end
+
+      defp fix_block_id(block_id) when is_list(block_id), do: Enum.join(block_id, ".")
+      defp fix_block_id(block_id), do: block_id
     end
 
   _ ->

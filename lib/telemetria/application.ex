@@ -4,6 +4,7 @@ defmodule Telemetria.Application do
   use Elixir.Application
 
   @backend Application.compile_env(:telemetria, :backend, Telemetria.Backend.Telemetry)
+           |> IO.inspect()
 
   @doc false
   def backend, do: @backend
@@ -38,5 +39,5 @@ defmodule Telemetria.Application do
 
   @impl Application
   def start_phase(:telemetry_setup, _start_type, []),
-    do: if(telemetry?(), do: Telemetria.Instrumenter.setup(), else: :ok)
+    do: if(telemetry?(), do: apply(Telemetria.Instrumenter, :setup, []), else: :ok)
 end
