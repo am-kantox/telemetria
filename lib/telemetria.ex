@@ -45,8 +45,8 @@ defmodule Telemetria do
 
     @telemetria level: :info, group: :weather_reports, locals: [:farenheit]
     def weather(city) do
-      farenheit = ExternalService.retrieve(city)
-      Converter.farenheit_to_celcius(farenheit)
+      fahrenheit = ExternalService.retrieve(city)
+      Converter.fahrenheit_to_celcius(fahrenheit)
     end
   end
   ```
