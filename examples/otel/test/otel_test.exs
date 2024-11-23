@@ -30,8 +30,7 @@ defmodule OtelTest do
                         "context_options_group" => :weather_reports,
                         "context_options_level" => :info,
                         "context_options_locals_0" => :celsius,
-                        "env_file" =>
-                          "/home/am/Proyectos/Elixir/telemetria/examples/otel/lib/otel.ex",
+                        "env_file" => _,
                         "env_line" => 7,
                         "env_module" => Otel,
                         "locals_celsius" => 232.77777777777777,
