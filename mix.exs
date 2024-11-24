@@ -91,7 +91,7 @@ defmodule Telemetria.MixProject do
       canonical: "http://hexdocs.pm/#{@app}",
       logo: "stuff/#{@app}-48x48.png",
       source_url: "https://github.com/am-kantox/#{@app}",
-      assets: "stuff/img",
+      assets: %{"stuff/img" => "assets"},
       extras: ["README.md" | Path.wildcard("stuff/*.md")],
       groups_for_modules: [
         # Telemetria

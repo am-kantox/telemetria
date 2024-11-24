@@ -35,8 +35,11 @@ defmodule Telemetria.Backend do
 
   case @implementation do
     module when is_atom(module) ->
+      @doc false
       defdelegate entry(block_id), to: @implementation
+      @doc false
       defdelegate return(block_context, context), to: @implementation
+      @doc false
       defdelegate update(block_context, updates), to: @implementation
 
     list when is_list(list) ->
