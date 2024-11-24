@@ -2,6 +2,11 @@ defmodule Telemetria.Backend do
   @moduledoc """
   This behaviour should be implemented by the backend, used for actual
   telemetry events processing.
+
+  Backend shipped with the library:
+
+  - `Telemetria.Backend.Telemetry`
+  - `Telemetria.Backend.OpenTelemetry`
   """
 
   @typedoc "The type used for naming blocks / events"

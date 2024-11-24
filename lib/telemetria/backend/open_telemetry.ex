@@ -49,5 +49,9 @@ case {Telemetria.Application.open_telemetry?(), Code.ensure_compiled(OpenTelemet
     end
 
   _ ->
-    nil
+    defmodule Telemetria.Backend.OpenTelemetry do
+      @moduledoc """
+      The implementation of `Telemetria.Backend` for `OpenTelemetry`.
+      """
+    end
 end

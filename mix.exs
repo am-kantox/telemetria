@@ -94,8 +94,17 @@ defmodule Telemetria.MixProject do
       assets: "stuff/img",
       extras: ["README.md" | Path.wildcard("stuff/*.md")],
       groups_for_modules: [
-        Defaults: [
-          Telemetria.Handler
+        # Telemetria
+        # Telemetria.Backend
+        Telemetry: [
+          Telemetria.Backend.Telemetry,
+          Telemetria.Handler,
+          Telemetria.Handler.Default,
+          Telemetria.Formatter,
+          Telemetria.Telemetry
+        ],
+        OpenTelemetry: [
+          Telemetria.Backend.OpenTelemetry
         ]
       ]
     ]
