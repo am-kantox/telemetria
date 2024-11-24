@@ -20,6 +20,8 @@ end
 
 ## Changelog
 
+- **`0.19.0`** —
+  - [UPD] `OpenTelemetry` support through backend abstraction
 - **`0.18.0`** —
   - [UPD] `locals: [:foo, :bar]` to export local vars from functions
 - **`0.17.0`** —
