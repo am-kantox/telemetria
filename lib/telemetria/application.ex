@@ -4,7 +4,6 @@ defmodule Telemetria.Application do
   use Elixir.Application
 
   @backend Application.compile_env(:telemetria, :backend, Telemetria.Backend.Telemetry)
-           |> IO.inspect()
 
   @doc false
   def backend, do: @backend
@@ -38,6 +37,7 @@ defmodule Telemetria.Application do
   end
 
   @impl Application
+  # credo:disable-for-lines:2 Credo.Check.Refactor.Apply
   def start_phase(:telemetry_setup, _start_type, []),
     do: if(telemetry?(), do: apply(Telemetria.Instrumenter, :setup, []), else: :ok)
 end

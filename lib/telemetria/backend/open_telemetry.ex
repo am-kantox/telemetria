@@ -28,13 +28,14 @@ case {Telemetria.Application.open_telemetry?(), Code.ensure_compiled(OpenTelemet
 
       def update(block_id, updates) when is_list(updates) do
         event_id = Enum.join([fix_block_id(block_id), "@", System.monotonic_time()])
-        event = OpenTelemetry.event(event_id, updates)
-        Tracer.add_events([event])
+        updates = Estructura.Flattenable.flatten(updates, jsonify: true)
+
+        Tracer.add_events([OpenTelemetry.event(event_id, updates)])
       end
 
       @impl true
       def return(block_ctx, context) do
-        attributes = Estructura.Flattenable.flatten(context)
+        attributes = Estructura.Flattenable.flatten(context, jsonify: true)
 
         Span.set_attributes(block_ctx, attributes)
         Span.end_span(block_ctx)

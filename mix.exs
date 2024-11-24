@@ -44,7 +44,7 @@ defmodule Telemetria.MixProject do
       {:telemetry_poller, "~> 1.0", optional: true},
       {:opentelemetry_api, "~> 1.4", optional: true},
       # helpers
-      {:estructura, "~> 1.3"},
+      {:estructura, "~> 1.6"},
       {:jason, "~> 1.0"},
       {:nimble_options, "~> 1.0"},
       # dev / test
