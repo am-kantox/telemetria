@@ -34,7 +34,7 @@ defmodule Telemetria do
   - **`locals: [atom()]`** — the list of names of local variables to be exported
     to the telemetry call
 
-  ## Example
+  ### Example
 
   The following code would emit the telemetry event for the function `weather`,
     returning `result` in Celcius _and_ injecting `farenheit` value under `locals`
@@ -62,7 +62,7 @@ defmodule Telemetria do
   Besides that, `telemetry: false` flag allows to purge the calls in compile-time
   resulting in zero overhead (useful for benchmark, or like.)
 
-  ## Example
+  ### Example
 
   You need to include the compiler in `mix.exs`:
 
