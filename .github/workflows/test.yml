@@ -29,3 +29,13 @@ jobs:
       - name: Run tests
         run: |
           MIX_ENV=test mix test
+      - name: Run tests with Telemetry
+        run: |
+          cd examples/tm
+          MIX_ENV=test mix deps.get
+          MIX_ENV=test mix test
+      - name: Run tests with OpenTelemetry
+        run: |
+          cd examples/otel
+          MIX_ENV=test mix deps.get
+          MIX_ENV=test mix test

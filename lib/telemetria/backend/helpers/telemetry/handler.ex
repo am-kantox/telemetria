@@ -9,10 +9,10 @@ defmodule Telemetria.Handler do
 
   @doc "The callback that will be invoked by `:telemetry`"
   @callback handle_event(
-              :telemetry.event_name(),
-              :telemetry.event_measurements(),
-              :telemetry.event_metadata(),
-              :telemetry.handler_config()
+              Telemetria.event_name(),
+              Telemetria.event_measurements(),
+              Telemetria.event_metadata(),
+              Telemetria.handler_config()
             ) :: :ok
 
   @type process_info :: [

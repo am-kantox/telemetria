@@ -31,17 +31,20 @@ defmodule Telemetria.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger, :telemetry],
+      extra_applications: [:logger],
       mod: {Telemetria.Application, []},
       start_phases: [{:telemetry_setup, []}],
-      registered: [Telemetria, Telemetria.Application, Telemetria.Instrumenter]
+      registered: [Telemetria, Telemetria.Application]
     ]
   end
 
   defp deps do
     [
-      {:telemetry, "~> 1.0"},
-      {:telemetry_poller, "~> 1.0"},
+      {:telemetry, "~> 1.0", optional: true},
+      {:telemetry_poller, "~> 1.0", optional: true},
+      {:opentelemetry_api, "~> 1.4", optional: true},
+      # helpers
+      {:estructura, "~> 1.6"},
       {:jason, "~> 1.0"},
       {:nimble_options, "~> 1.0"},
       # dev / test

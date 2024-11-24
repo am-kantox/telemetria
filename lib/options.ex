@@ -47,6 +47,11 @@ defmodule Telemetria.Options do
       doc: "Specifies whether telemetry should be enabled.",
       default: true
     ],
+    backend: [
+      type: :atom,
+      doc: "The backend to be used as an actual implementation",
+      default: Telemetria.Backend.Telemetry
+    ],
     level: [
       type: {:custom, Telemetria.Options, :log_level, []},
       doc:
@@ -98,7 +103,7 @@ defmodule Telemetria.Options do
       doc: """
       The application-specific events.
 
-      See `t::telemetry.event_prefix/0` and `t::telemetry.event_name/0`.
+      See `t:Telemetria.event_prefix/0` and `t:Telemetria.event_name/0`.
       """
     ],
     handler: [

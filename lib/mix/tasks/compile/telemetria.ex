@@ -12,7 +12,6 @@ defmodule Mix.Tasks.Compile.Telemetria do
 
   @impl Compiler
   def run(argv) do
-    :ok = Application.ensure_started(:telemetry)
     Events.start_link()
 
     Compiler.after_compiler(:app, &after_compiler(&1, argv))

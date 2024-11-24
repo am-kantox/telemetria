@@ -1,7 +1,9 @@
 defmodule Telemetria do
   @moduledoc """
   `Telemetría` is the opinionated wrapper for [`:telemetry`](https://hexdocs.pm/telemetry)
-  providing handy macros to attach telemetry events to any function, private function,
+  (started with `v0.19.0` it became agnostic to the actual telemetry backend and supports
+  `OpenTelemetry` out of the box, allowing for more custom implementations of the said backend.)
+  It provides handy macros to attach telemetry events to any function, private function,
   anonymous functions (on per-clause basis) and just random set of expressions.
 
   `Telemetría` exports three macros:
@@ -43,8 +45,8 @@ defmodule Telemetria do
 
     @telemetria level: :info, group: :weather_reports, locals: [:farenheit]
     def weather(city) do
-      farenheit = ExternalService.retrieve(city)
-      Converter.farenheit_to_celcius(farenheit)
+      fahrenheit = ExternalService.retrieve(city)
+      Converter.fahrenheit_to_celcius(fahrenheit)
     end
   end
   ```
@@ -119,7 +121,14 @@ defmodule Telemetria do
   #{NimbleOptions.docs(Telemetria.Options.schema())}
   """
 
-  alias Telemetria.Mix.Events
+  alias Telemetria.{Backend, Mix.Events}
+
+  @type event_name :: [atom(), ...] | String.t()
+  @type event_measurements :: map()
+  @type event_metadata :: map()
+  @type event_value :: number()
+  @type event_prefix :: [atom()]
+  @type handler_config :: term()
 
   @doc false
   defmacro __using__(opts) do
@@ -335,25 +344,27 @@ defmodule Telemetria do
             utc: DateTime.utc_now()
           ]
 
+          block_ctx = Backend.entry(unquote(event))
+
           result = unquote(block)
 
           if unquote(conditional).(result) do
             benchmark = System.monotonic_time(:microsecond) - now[:monotonic]
 
-            Telemetria.Throttler.execute(unquote(group), {
-              unquote(event),
-              %{
-                system_time: now,
-                consumed: benchmark
-              },
-              %{
-                env: unquote(caller),
-                locals: Keyword.take(binding(), unquote(locals)),
-                result: unquote(result_transform).(result),
-                args: unquote(args_transform).(unquote(args)),
-                context: unquote(context)
-              }
-            })
+            attributes = %{
+              env: unquote(caller),
+              locals: Keyword.take(binding(), unquote(locals)),
+              result: unquote(result_transform).(result),
+              args: unquote(args_transform).(unquote(args)),
+              context: unquote(context)
+            }
+
+            Backend.update(unquote(event), %{timestamp: now[:utc]})
+
+            Telemetria.Throttler.execute(
+              unquote(group),
+              {block_ctx, %{system_time: now, consumed: benchmark}, attributes}
+            )
           end
 
           result
