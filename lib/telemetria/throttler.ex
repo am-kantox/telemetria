@@ -75,9 +75,13 @@ defmodule Telemetria.Throttler do
       |> Map.pop(:context, %{})
 
     updates = if is_function(reshaper, 1), do: reshaper.(updates), else: updates
-    updates = Telemetria.Backend.reshape(updates)
 
-    Telemetria.Backend.return(event, Map.put(updates, :context, context))
+    updates =
+      updates
+      |> Map.put(:context, context)
+      |> Telemetria.Backend.reshape()
+
+    Telemetria.Backend.return(event, updates)
   end
 
   defp do_execute(group, [event]),

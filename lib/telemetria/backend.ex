@@ -47,10 +47,10 @@ defmodule Telemetria.Backend do
       @doc false
       defdelegate update(block_context, updates), to: @implementation
       @doc false
-      if function_exported?(@implementation, :reshape, 1) do
-        defdelegate reshape(updates), to: @implementation
-      else
-        def reshape(updates), do: updates
+      def reshape(updates) do
+        if function_exported?(@implementation, :reshape, 1),
+          do: apply(@implementation, :reshape, [updates]),
+          else: updates
       end
 
     list when is_list(list) ->
