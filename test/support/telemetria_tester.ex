@@ -53,7 +53,8 @@ defmodule Test.Telemetria.Example do
               transform: [
                 args: {__MODULE__, :transform_args},
                 result: &__MODULE__.transform_result/1
-              ]
+              ],
+              reshape: &Test.Telemetria.Example.reshape/1
   defp annotated_2(i) when (is_integer(i) and i == 42) or is_nil(i), do: i || 42
 
   @telemetria level: :error, if: &Test.Telemetria.S.allow?/1
@@ -84,4 +85,6 @@ defmodule Test.Telemetria.Example do
   def transform_args(args), do: inspect(args)
 
   def transform_result(result), do: inspect(result)
+
+  def reshape(outcome), do: Map.take(outcome, [:args, :result, :locals])
 end
