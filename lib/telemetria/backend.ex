@@ -23,13 +23,16 @@ defmodule Telemetria.Backend do
   @type block_metadata :: map()
 
   @doc "The implementation will be called when the block gets entered"
-  @callback entry(block_id()) :: block_context()
+  @callback entry(block_id()) :: block_context() | [block_context()]
 
   @doc "The implementation will be called when the block gets exited / executed"
-  @callback return(block_context(), block_context()) :: :ok
+  @callback return(block_context(), block_context()) :: block_context() | [block_context()]
 
   @doc "The implementation will be called when the block context is to be updated"
-  @callback update(block_context(), block_metadata()) :: block_context()
+  @callback update(block_context(), block_metadata()) :: block_context() | [block_context()]
+
+  @doc "The implementation will be called when the block context is to be exited"
+  @callback exit(block_context()) :: :ok
 
   @doc "The implementation will be called to reshape the event before sending it to the actual handler"
   @callback reshape(block_metadata()) :: block_metadata()
@@ -47,6 +50,9 @@ defmodule Telemetria.Backend do
       @doc false
       defdelegate update(block_context, updates), to: @implementation
       @doc false
+      defdelegate exit(block_context), to: @implementation
+      @doc false
+      # credo:disable-for-lines:4 Credo.Check.Refactor.Apply
       def reshape(updates) do
         if function_exported?(@implementation, :reshape, 1),
           do: apply(@implementation, :reshape, [updates]),
@@ -60,15 +66,19 @@ defmodule Telemetria.Backend do
 
       @doc false
       def entry(block_id),
-        do: Enum.each(@implementation, & &1.entry(block_id))
+        do: Enum.map(@implementation, & &1.entry(block_id))
 
       @doc false
       def return(block_context, context),
-        do: Enum.each(@implementation, & &1.return(block_context, context))
+        do: Enum.map(@implementation, & &1.return(block_context, context))
 
       @doc false
       def update(block_context, updates),
-        do: Enum.each(@implementation, & &1.update(block_context, updates))
+        do: Enum.map(@implementation, & &1.update(block_context, updates))
+
+      @doc false
+      def exit(block_context),
+        do: Enum.each(@implementation, & &1.exit(block_context))
 
       @doc false
       def reshape(updates), do: updates

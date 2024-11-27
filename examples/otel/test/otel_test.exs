@@ -21,6 +21,37 @@ defmodule OtelTest do
 
     assert log =~ "[warning] Unexpected throttle setting for group `:weather_reports` → nil"
 
+    # nested span
+    assert_receive {:span,
+                    {:span, _, _, {:tracestate, []}, link, "otel.do_f_to_c", :internal, _, _,
+                     {:attributes, 128, :infinity, 0,
+                      %{
+                        "args_fahrenheit" => 451,
+                        "context_conditional" => nil,
+                        "context_options_group" => :weather_reports,
+                        "context_options_level" => :info,
+                        "env_file" => _,
+                        "env_line" => 13,
+                        "env_module" => Otel,
+                        "result" => 232.77777777777777,
+                        "measurements_consumed" => _,
+                        "measurements_system_time_monotonic" => _,
+                        "measurements_system_time_system" => _,
+                        "telemetria_group" => :weather_reports
+                      }},
+                     {:events, 128, 128, :infinity, 0,
+                      [
+                        {:event, _, "otel.do_f_to_c@" <> _, {:attributes, 128, :infinity, 0, %{}}}
+                      ]},
+                     {:links, 128, 128, :infinity, 0,
+                      [
+                        {:link, _, _, {:attributes, 128, :infinity, 0, %{}}, {:tracestate, []}}
+                      ]}, :undefined, 1, false,
+                     {:instrumentation_scope, "telemetria", _, :undefined}}}
+                   when is_integer(link),
+                   1000
+
+    # parent span
     assert_receive {:span,
                     {:span, _, _, {:tracestate, []}, :undefined, "otel.f_to_c", :internal, _, _,
                      {:attributes, 128, :infinity, 0,
@@ -43,7 +74,7 @@ defmodule OtelTest do
                      {:events, 128, 128, :infinity, 0,
                       [
                         {:event, _, "otel.f_to_c@" <> _, {:attributes, 128, :infinity, 0, %{}}}
-                      ]}, {:links, 128, 128, :infinity, 0, []}, :undefined, 1, false,
+                      ]}, {:links, 128, 128, :infinity, 1, []}, :undefined, 1, false,
                      {:instrumentation_scope, "telemetria", _, :undefined}}},
                    1000
   end

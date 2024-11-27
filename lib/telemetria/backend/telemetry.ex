@@ -20,6 +20,9 @@ case {Telemetria.Application.telemetry?(), Code.ensure_compiled(:telemetry)} do
       end
 
       @impl true
+      def exit(_block_id), do: :ok
+
+      @impl true
       def reshape(updates), do: updates
     end
 
