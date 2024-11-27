@@ -20,6 +20,8 @@ end
 
 ## Changelog
 
+- **`0.19.1`** —
+  - [UPD] `reshape/1` everywhere to make a result transformable
 - **`0.19.0`** —
   - [UPD] `OpenTelemetry` support through backend abstraction
 - **`0.18.0`** —
