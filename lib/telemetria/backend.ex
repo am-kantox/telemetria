@@ -31,6 +31,11 @@ defmodule Telemetria.Backend do
   @doc "The implementation will be called when the block context is to be updated"
   @callback update(block_context(), block_metadata()) :: block_context()
 
+  @doc "The implementation will be called to reshape the event before sending it to the actual handler"
+  @callback reshape(block_metadata()) :: block_metadata()
+
+  @optional_callbacks reshape: 1
+
   @implementation Telemetria.Application.backend()
 
   case @implementation do
@@ -41,18 +46,31 @@ defmodule Telemetria.Backend do
       defdelegate return(block_context, context), to: @implementation
       @doc false
       defdelegate update(block_context, updates), to: @implementation
+      @doc false
+      def reshape(updates) do
+        if function_exported?(@implementation, :reshape, 1),
+          do: apply(@implementation, :reshape, [updates]),
+          else: updates
+      end
 
     list when is_list(list) ->
-      def entry(block_id) do
-        Enum.each(@implementation, & &1.entry(block_id))
+      if Enum.any?(@implementation, &function_exported?(&1, :reshape, 1)) do
+        IO.warn("[telemetría] `reshape/1` is ignored when several backends are specified")
       end
 
-      def return(block_context, context) do
-        Enum.each(@implementation, & &1.return(block_context, context))
-      end
+      @doc false
+      def entry(block_id),
+        do: Enum.each(@implementation, & &1.entry(block_id))
 
-      def update(block_context, updates) do
-        Enum.each(@implementation, & &1.update(block_context, updates))
-      end
+      @doc false
+      def return(block_context, context),
+        do: Enum.each(@implementation, & &1.return(block_context, context))
+
+      @doc false
+      def update(block_context, updates),
+        do: Enum.each(@implementation, & &1.update(block_context, updates))
+
+      @doc false
+      def reshape(updates), do: updates
   end
 end

@@ -35,14 +35,16 @@ case {Telemetria.Application.open_telemetry?(), Code.ensure_compiled(OpenTelemet
 
       @impl true
       def return(block_ctx, context) do
-        attributes = Estructura.Flattenable.flatten(context, jsonify: true)
-
-        Span.set_attributes(block_ctx, attributes)
+        Span.set_attributes(block_ctx, context)
         Span.end_span(block_ctx)
         OpenTelemetry.Ctx.detach(block_ctx)
 
         :ok
       end
+
+      @impl true
+      def reshape(updates),
+        do: Estructura.Flattenable.flatten(updates, jsonify: true) |> IO.inspect()
 
       defp fix_block_id(block_id) when is_list(block_id), do: Enum.join(block_id, ".")
       defp fix_block_id(block_id), do: block_id

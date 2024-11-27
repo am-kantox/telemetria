@@ -33,6 +33,11 @@ defmodule Telemetria do
     see `:throttle` setting in `Telemetria.Options`
   - **`locals: [atom()]`** — the list of names of local variables to be exported
     to the telemetry call
+  - **`transform: [{:args, (list() -> list())}, {:result, (any() -> any())}]`** — 
+    the functions to be called on the incoming attributes and/or result to reshape them
+  - **`reshape: (map() -> map())`** — the function to be called on the resulting attributes
+    to reshape them before sending to the actual telemetry handler; the default application-wide
+    reshaper might be set in `:telemetria, :reshaper` config
 
   ### Example
 
@@ -129,6 +134,8 @@ defmodule Telemetria do
   @type event_value :: number()
   @type event_prefix :: [atom()]
   @type handler_config :: term()
+
+  @default_reshaper Application.compile_env(:telemetria, :reshaper)
 
   @doc false
   defmacro __using__(opts) do
@@ -331,6 +338,9 @@ defmodule Telemetria do
       locals =
         context |> get_in([:options, :locals]) |> Kernel.||([])
 
+      reshape =
+        context |> get_in([:options, :reshape]) |> Kernel.||(@default_reshaper)
+
       {clause_args, context} = Keyword.pop(context, :arguments, [])
       args = Keyword.merge(args, clause_args)
 
@@ -363,7 +373,7 @@ defmodule Telemetria do
 
             Telemetria.Throttler.execute(
               unquote(group),
-              {block_ctx, %{system_time: now, consumed: benchmark}, attributes}
+              {block_ctx, %{system_time: now, consumed: benchmark}, attributes, unquote(reshape)}
             )
           end
 

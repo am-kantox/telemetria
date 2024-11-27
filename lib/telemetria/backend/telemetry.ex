@@ -18,6 +18,9 @@ case {Telemetria.Application.telemetry?(), Code.ensure_compiled(:telemetry)} do
         {measurements, metadata} = Map.pop(context, :measurements, %{})
         :telemetry.execute(block_id, measurements, metadata)
       end
+
+      @impl true
+      def reshape(updates), do: updates
     end
 
   _ ->
