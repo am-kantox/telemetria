@@ -20,6 +20,8 @@ end
 
 ## Changelog
 
+- **`0.20.0`** —
+  - [UPD] support for nested spans 
 - **`0.19.1`** —
   - [UPD] `reshape/1` everywhere to make a result transformable
 - **`0.19.0`** —
