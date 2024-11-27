@@ -375,6 +375,8 @@ defmodule Telemetria do
               unquote(group),
               {block_ctx, %{system_time: now, consumed: benchmark}, attributes, unquote(reshape)}
             )
+
+            Backend.exit(block_ctx)
           end
 
           result

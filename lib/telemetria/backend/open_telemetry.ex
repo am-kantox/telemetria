@@ -13,13 +13,18 @@ case {Telemetria.Application.open_telemetry?(), Code.ensure_compiled(OpenTelemet
 
       @impl true
       def entry(block_id) do
-        OpenTelemetry.Ctx.get_current()
-        |> OpenTelemetry.Ctx.attach()
+        # https://opentelemetry.io/docs/languages/erlang/instrumentation/
+        token = OpenTelemetry.Ctx.get_current() |> OpenTelemetry.Ctx.attach()
+        parent = OpenTelemetry.Tracer.current_span_ctx()
+        link = OpenTelemetry.link(parent)
 
-        block_id
-        |> fix_block_id()
-        |> Tracer.start_span()
-        |> tap(&Tracer.set_current_span/1)
+        block_ctx =
+          block_id
+          |> fix_block_id()
+          |> Tracer.start_span(%{links: [link]})
+          |> tap(&Tracer.set_current_span/1)
+
+        {token, parent, block_ctx}
       end
 
       @impl true
@@ -34,12 +39,17 @@ case {Telemetria.Application.open_telemetry?(), Code.ensure_compiled(OpenTelemet
       end
 
       @impl true
-      def return(block_ctx, context) do
+      def return({_token, _parent, block_ctx}, context) do
         Span.set_attributes(block_ctx, context)
         Span.end_span(block_ctx)
-        OpenTelemetry.Ctx.detach(block_ctx)
 
         :ok
+      end
+
+      @impl true
+      def exit({token, parent, _block_ctx}) do
+        OpenTelemetry.Ctx.detach(token)
+        Tracer.set_current_span(parent)
       end
 
       @impl true
