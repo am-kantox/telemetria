@@ -44,7 +44,7 @@ case {Telemetria.Application.open_telemetry?(), Code.ensure_compiled(OpenTelemet
 
       @impl true
       def reshape(updates),
-        do: Estructura.Flattenable.flatten(updates, jsonify: true) |> IO.inspect()
+        do: Estructura.Flattenable.flatten(updates, jsonify: true)
 
       defp fix_block_id(block_id) when is_list(block_id), do: Enum.join(block_id, ".")
       defp fix_block_id(block_id), do: block_id
