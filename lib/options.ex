@@ -52,6 +52,16 @@ defmodule Telemetria.Options do
       doc: "The backend to be used as an actual implementation",
       default: Telemetria.Backend.Telemetry
     ],
+    messenger: [
+      type: :atom,
+      doc: "The messenger to be used as an actual implementation",
+      default: nil
+    ],
+    messenger_channels: [
+      type: :map,
+      doc: "The messenger channels as a map `%{name => {impl, opts}}`",
+      default: %{}
+    ],
     level: [
       type: {:custom, Telemetria.Options, :log_level, []},
       doc:

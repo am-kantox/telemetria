@@ -8,6 +8,7 @@ config :telemetria,
     [:test, :telemetria, :example, :sum_with_doubled],
     [:test, :telemetria, :example, :half],
     [:test, :telemetria, :example, :half_named, :foo],
+    [:test, :telemetria, :example, :third],
     [:test, :telemetria, :example, :tmed],
     [:test, :telemetria, :example, :tmed_do],
     [:test, :telemetria, :example, :guarded],
@@ -21,3 +22,7 @@ config :telemetria,
 # config :logger, :default_formatter,
 #   format: {Telemetria.Formatter, :format},
 #   metadata: :all
+
+if Mix.env() == :test do
+  config :telemetria, :messenger, :mox
+end

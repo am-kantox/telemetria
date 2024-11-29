@@ -9,7 +9,7 @@ defmodule Telemetria.Throttler do
 
   def execute(group \\ nil, event), do: GenServer.cast(name(), {:event, group || :default, event})
 
-  defp name do
+  def name do
     [Telemetria.otp_app(), :telemetria, :throttler]
     |> Enum.map(&Atom.to_string/1)
     |> Enum.map(&Macro.camelize/1)
@@ -67,12 +67,30 @@ defmodule Telemetria.Throttler do
     Logger.warning("Wrong config for group: #{group}, skipping")
   end
 
-  defp do_execute(group, {event, measurements, metadata, reshaper}) do
+  defp do_execute(group, {event, measurements, metadata, reshaper, messenger}) do
     {context, updates} =
       metadata
       |> Map.put(:telemetria_group, group)
       |> Map.put(:measurements, measurements)
       |> Map.pop(:context, %{})
+
+    case messenger do
+      false ->
+        :ok
+
+      nil ->
+        :ok
+
+      impl when is_atom(impl) ->
+        updates
+        |> Map.put(:event, event)
+        |> Telemetria.Messenger.post(impl)
+
+      {impl, opts} when is_atom(impl) ->
+        updates
+        |> Map.put(:event, event)
+        |> Telemetria.Messenger.post(impl, opts)
+    end
 
     updates = if is_function(reshaper, 1), do: reshaper.(updates), else: updates
 
