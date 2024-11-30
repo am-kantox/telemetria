@@ -38,6 +38,9 @@ defmodule Telemetria do
   - **`reshape: (map() -> map())`** — the function to be called on the resulting attributes
     to reshape them before sending to the actual telemetry handler; the default application-wide
     reshaper might be set in `:telemetria, :reshaper` config
+  - **`messenger_channels: %{optional(atom()) => {module, keyword()}`** — more handy messenger
+    management, several channels config with channels names associated with their
+    implementations and properties
 
   ### Example
 
@@ -135,7 +138,9 @@ defmodule Telemetria do
   @type event_prefix :: [atom()]
   @type handler_config :: term()
 
+  @default_level Application.compile_env(:telemetria, :level, :info)
   @default_reshaper Application.compile_env(:telemetria, :reshaper)
+  @messenger_channels Application.compile_env(:telemetria, :messenger_channels, %{})
 
   @doc false
   defmacro __using__(opts) do
@@ -327,6 +332,8 @@ defmodule Telemetria do
                 "transform must be a tuple `{mod, fun}` or a function capture, #{inspect(weird)} given"
       end
 
+      level = get_in(context, [:options, :level]) || @default_level
+
       group = get_in(context, [:options, :group])
 
       args_transform =
@@ -340,6 +347,16 @@ defmodule Telemetria do
 
       reshape =
         context |> get_in([:options, :reshape]) |> Kernel.||(@default_reshaper)
+
+      messenger =
+        context
+        |> get_in([:options, :messenger])
+        |> case do
+          nil -> nil
+          false -> false
+          {mod, opts} -> {mod, Keyword.put_new(opts, :level, level)}
+          channel -> get_channel_info(channel, level)
+        end
 
       {clause_args, context} = Keyword.pop(context, :arguments, [])
       args = Keyword.merge(args, clause_args)
@@ -373,7 +390,8 @@ defmodule Telemetria do
 
             Telemetria.Throttler.execute(
               unquote(group),
-              {block_ctx, %{system_time: now, consumed: benchmark}, attributes, unquote(reshape)}
+              {block_ctx, %{system_time: now, consumed: benchmark}, attributes, unquote(reshape),
+               unquote(messenger)}
             )
 
             Backend.exit(block_ctx)
@@ -408,6 +426,13 @@ defmodule Telemetria do
   defp variablize({:{}, _, elems}), do: {:tuple, Enum.map(elems, &variablize/1)}
   defp variablize({:%{}, _, elems}), do: {:map, Enum.map(elems, &variablize/1)}
   defp variablize({var, _, _} = val), do: {var, val}
+
+  defp get_channel_info(channel, level) do
+    case Map.get(@messenger_channels, channel, {channel, []}) do
+      {mod, opts} -> {mod, Keyword.put(opts, :level, level)}
+      mod when is_atom(mod) -> {mod, level: level}
+    end
+  end
 
   defp extract_guards([]), do: []
 

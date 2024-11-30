@@ -12,7 +12,7 @@ defmodule TmTest do
     log =
       capture_log(fn ->
         assert Tm.f_to_c(451) == 233
-        Process.sleep(100)
+        Process.sleep(500)
       end)
 
     assert log =~ "[warning] Unexpected throttle setting for group `:weather_reports` → nil"
@@ -25,7 +25,7 @@ defmodule TmTest do
     {:ok, log} =
       with_log(fn ->
         Tm.f_to_c(451)
-        Process.sleep(100)
+        Process.sleep(500)
       end)
 
     assert log =~

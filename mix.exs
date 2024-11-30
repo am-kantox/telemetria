@@ -31,7 +31,7 @@ defmodule Telemetria.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger],
+      extra_applications: [:logger, :inets, :ssl],
       mod: {Telemetria.Application, []},
       start_phases: [{:telemetry_setup, []}],
       registered: [Telemetria, Telemetria.Application]
@@ -48,6 +48,7 @@ defmodule Telemetria.MixProject do
       {:jason, "~> 1.0"},
       {:nimble_options, "~> 1.0"},
       # dev / test
+      {:mox, "~> 1.0", only: [:dev, :test, :ci]},
       {:dialyxir, "~> 1.0", only: [:dev, :test, :ci], runtime: false},
       {:credo, "~> 1.0", only: [:dev, :ci], runtime: false},
       {:ex_doc, "~> 0.11", only: :dev, runtime: false}
