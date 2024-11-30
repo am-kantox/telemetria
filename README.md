@@ -20,6 +20,8 @@ end
 
 ## Changelog
 
+- **`0.21.0`** —
+  - [UPD] support for external messengers (slack)
 - **`0.20.0`** —
   - [UPD] support for nested spans 
 - **`0.19.1`** —
