@@ -38,8 +38,9 @@ defmodule Telemetria do
   - **`reshape: (map() -> map())`** — the function to be called on the resulting attributes
     to reshape them before sending to the actual telemetry handler; the default application-wide
     reshaper might be set in `:telemetria, :reshaper` config
-  - **`messenger: true | false | module()`** — when `true` or `module`, the instant message
-    is to be sent to the desired destination (like slack)
+  - **`messenger_channels: %{optional(atom()) => {module, keyword()}`** — more handy messenger
+    management, several channels config with channels names associated with their
+    implementations and properties
 
   ### Example
 
@@ -427,8 +428,10 @@ defmodule Telemetria do
   defp variablize({var, _, _} = val), do: {var, val}
 
   defp get_channel_info(channel, level) do
-    {mod, opts} = Map.get(@messenger_channels, channel, {channel, []})
-    {mod, Keyword.put(opts, :level, level)}
+    case Map.get(@messenger_channels, channel, {channel, []}) do
+      {mod, opts} -> {mod, Keyword.put(opts, :level, level)}
+      mod when is_atom(mod) -> {mod, level: level}
+    end
   end
 
   defp extract_guards([]), do: []

@@ -3,8 +3,6 @@ defmodule Telemetria.Messenger.Slack do
 
   @behaviour Telemetria.Messenger
 
-  @default_url Application.compile_env(:telemetria, :messenger_default_url)
-
   @impl true
   # %{
   #   args: [a: 42],
@@ -89,7 +87,7 @@ defmodule Telemetria.Messenger.Slack do
       |> Jason.encode!()
       |> :erlang.binary_to_list()
 
-    url = Keyword.get(opts, :url, @default_url)
+    url = Keyword.fetch!(opts, :url)
 
     :httpc.request(:post, {to_charlist(url), [], ~c"application/json", json}, [], [])
   end

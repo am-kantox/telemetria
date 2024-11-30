@@ -25,7 +25,7 @@ defmodule Telemetria.Messenger do
 
   @optional_callbacks format: 2
 
-  @implementation Application.compile_env(:telemetria, :messenger, Logger)
+  @implementation Telemetria.Messenger.Logger
 
   @doc "Routes the message to the configured messenger(s)"
   @spec post(message() | String.t(), impl :: atom() | module(), opts :: keyword()) ::
@@ -43,7 +43,8 @@ defmodule Telemetria.Messenger do
     do_post(message, impl, opts)
   end
 
-  def post(message, impl, opts), do: do_post(message, impl, opts)
+  def post(message, impl, opts) when is_binary(message),
+    do: do_post(message, impl, opts)
 
   defp do_post(message, impl, opts) do
     impl = fix_impl_name(impl)

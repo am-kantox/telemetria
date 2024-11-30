@@ -24,5 +24,5 @@ config :telemetria,
 #   metadata: :all
 
 if Mix.env() == :test do
-  config :telemetria, :messenger, :mox
+  config :telemetria, :messenger_channels, %{mox: {:mox, []}}
 end

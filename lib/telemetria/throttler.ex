@@ -74,22 +74,10 @@ defmodule Telemetria.Throttler do
       |> Map.put(:measurements, measurements)
       |> Map.pop(:context, %{})
 
-    case messenger do
-      false ->
-        :ok
-
-      nil ->
-        :ok
-
-      impl when is_atom(impl) ->
-        updates
-        |> Map.put(:event, event)
-        |> Telemetria.Messenger.post(impl)
-
-      {impl, opts} when is_atom(impl) ->
-        updates
-        |> Map.put(:event, event)
-        |> Telemetria.Messenger.post(impl, opts)
+    with {impl, opts} when is_atom(impl) and is_list(opts) <- messenger do
+      updates
+      |> Map.put(:event, event)
+      |> Telemetria.Messenger.post(impl, opts)
     end
 
     updates = if is_function(reshaper, 1), do: reshaper.(updates), else: updates

@@ -33,7 +33,7 @@ defmodule Test.Telemetria.Example do
     t(&(&1 / 2), suffix: :foo).(a)
   end
 
-  @telemetria level: :warning, messenger: true, locals: [:result]
+  @telemetria level: :warning, messenger: :mox, locals: [:result]
   def third(a) do
     result = a / 3
     result
