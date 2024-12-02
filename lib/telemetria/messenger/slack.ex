@@ -79,7 +79,17 @@ defmodule Telemetria.Messenger.Slack do
       do: post(unquote(level), message, opts)
   end)
 
-  defp post(level, message, opts) do
+  defp post(level, message, opts) when is_binary(message) do
+    case Jason.decode(message) do
+      {:ok, json} ->
+        post(level, json, opts)
+
+      {:error, error} ->
+        post(level, %{error: inspect(error), fallback: message, description: message}, opts)
+    end
+  end
+
+  defp post(level, %{} = message, opts) do
     json =
       message
       |> put_in([:emoji_icon], slack_icon(level))
