@@ -16,6 +16,9 @@ defmodule Telemetria.Application do
 
   @impl Elixir.Application
   def start(_type, _args) do
+    Application.ensure_all_started(:inets)
+    Application.ensure_all_started(:ssl)
+
     if telemetry?(), do: Application.ensure_all_started(:telemetry)
     Application.put_all_env(telemetria: Telemetria.Options.initial())
 

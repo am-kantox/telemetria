@@ -67,7 +67,7 @@ defmodule Telemetria.Throttler do
     Logger.warning("Wrong config for group: #{group}, skipping")
   end
 
-  defp do_execute(group, {event, measurements, metadata, reshaper, messenger}) do
+  defp do_execute(group, {event, measurements, metadata, reshaper, messenger, block_ctx}) do
     {context, updates} =
       metadata
       |> Map.put(:telemetria_group, group)
@@ -87,7 +87,7 @@ defmodule Telemetria.Throttler do
       |> Map.put(:context, context)
       |> Telemetria.Backend.reshape()
 
-    Telemetria.Backend.return(event, updates)
+    Telemetria.Backend.return(block_ctx, updates)
   end
 
   defp do_execute(group, [event]),

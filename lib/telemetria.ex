@@ -390,8 +390,8 @@ defmodule Telemetria do
 
             Telemetria.Throttler.execute(
               unquote(group),
-              {block_ctx, %{system_time: now, consumed: benchmark}, attributes, unquote(reshape),
-               unquote(messenger)}
+              {unquote(event), %{system_time: now, consumed: benchmark}, attributes,
+               unquote(reshape), unquote(messenger), block_ctx}
             )
 
             Backend.exit(block_ctx)
