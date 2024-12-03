@@ -14,11 +14,25 @@ defmodule Telemetria do
     and adds the options passed as a keyword to the second parameter to the
     context of the respective telemetry event
 
+  > ### Module attribute over macros {: .tip}
+  >
+  > Unless inevitably needed, one should prefer module attributes over explicit macros
+  > (see the section “Using Module Attribute” below.)
+  >
+  > Module attributes have a way richer customization abilities, including but 
+  > not limited to conditional wrapping, slack messaging etc. See options
+  > which are accepted by the module attribute below.
+
   `Telemetría` allows compile-time telemetry events definition and provides
   a compiler that is responsible for incremental builds and updates of the list of
   events telemetry is aware about.
 
-  ## Using module attribute
+  > ### Compile-time config {: .warning}
+  >
+  > `Telemetría` uses a compiler to wrap annotated functions with a telemetry calls.
+  > That means, that all the configuration must be placed into compile-time config files.
+
+  ## Using Module Attribute
 
   Besides the functions listed above, one might attach `Telemetría` to the function
   by annotating it with `@telemetria` module attribute.
@@ -87,7 +101,26 @@ defmodule Telemetria do
   end
   ```
 
-  In the modules you want to add telemetry to, you should `require Telemetria` (or,
+  ## Enabling `Telemetría`
+
+  To enable `telemetría` for the project, you should add `:telemetria` compiler to the list
+  of `Mix.compilers/0` as shown below (`mix.exs`).
+
+  ```elixir
+  def project do
+    [
+      ...
+      compilers: [:telemetria | Mix.compilers()],
+      ...
+    ]
+  end
+  ```
+
+  Additional steps are described below for the different use-cases.
+
+  ### Plain Macros
+
+  In the modules you want to add telemetry macros to, you should `require Telemetria` (or,
   preferably, `import Telemetria` to make it available without FQN.) Once imported,
   the macros are available and tracked by the compiler.
 
@@ -107,6 +140,52 @@ defmodule Telemetria do
         end
     end
   end
+  ```
+
+  ### Module Attribute
+
+  Module attributes are processed by the compilation hooks. To enable `@telemetria`
+  module attributes, one should `use Telemetria`. Below is the example that would send
+  two telemetry events to the configured `Telemetria.Backend`.
+
+  ```elixir
+  defmodule Otel do
+    @moduledoc "`Telemetria` with :opentelemetry` example"
+
+    use Telemetria
+
+    @telemetria level: :info, group: :weather_reports, locals: [:celsius], messenger: :slack
+    def f_to_c(fahrenheit) do
+      celsius = do_f_to_c(fahrenheit)
+      round(celsius)
+    end
+
+    @telemetria level: :info, group: :weather_reports
+    defp do_f_to_c(fahrenheit), do: (fahrenheit - 32) * 5 / 9
+  end
+  ```
+
+  ### Typical Config
+
+  `Telemetría` requires an application-wide config to operate properly. Yes, I know
+  having a config in a library is discouraged by the core team. Unfortunately, for the
+  compiler to work properly, the static compile-time config is still required.
+
+  After all, even if running many OTP applications on the same node, one would barely
+  want to have a different telemetry config for them.
+
+  ```elixir
+  import Config
+
+  config :telemetria,
+    purge_level: :debug,
+    level: :info,
+    events: [
+      [:tm, :f_to_c]
+    ],
+    throttle: %{some_group: {1_000, :last}}
+  # create a slack app and put URL here
+  # messenger_channels: %{slack: {:slack, url: ""}}
   ```
 
   ## Use in releases
