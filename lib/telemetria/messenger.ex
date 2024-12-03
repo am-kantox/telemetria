@@ -41,6 +41,35 @@ defmodule Telemetria.Messenger do
         else: inspect(message, opts)
 
     do_post(message, impl, opts)
+  rescue
+    e in KeyError ->
+      require Logger
+
+      message =
+        """
+        One or more required options were missing for the call to the messenger implementation
+        in `telemetría` module attribute (or global config.)
+
+        For now this is rescued and application can continue, but messenging from telemetria won’t work.
+
+        Error: #{e.message}.
+        """
+
+      Logger.error(message)
+
+    e in RuntimeError ->
+      require Logger
+
+      message =
+        """
+        The unexpected runtime error occured. Usually it means the config in `runtime.exs`
+        is diverged from what `telemetría` compliler saw. Please move all the config to the
+        compile-time configurations files since `telemetría` needs them during a compilation stage.
+
+        Error: #{e.message}
+        """
+
+      Logger.error(message)
   end
 
   def post(message, impl, opts) when is_binary(message),
