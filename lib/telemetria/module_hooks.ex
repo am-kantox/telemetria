@@ -80,6 +80,9 @@ defmodule Telemetria.Hooks do
 
         Module.delete_attribute(env.module, :telemetria)
 
+      {nil, _kind, _body} ->
+        :ok
+
       {options, _kind, _body} when not is_nil(options) ->
         raise Telemetria.Error,
               "only function annotating is currently supported, please remove #{inspect(options)}"

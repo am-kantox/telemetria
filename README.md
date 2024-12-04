@@ -20,6 +20,8 @@ end
 
 ## Changelog
 
+- **`0.22.0`** —
+  - [FIX] bug fix for `finitomata` integration
 - **`0.21.0`** —
   - [UPD] support for external messengers (slack)
 - **`0.20.0`** —
