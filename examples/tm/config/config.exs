@@ -1,6 +1,7 @@
 import Config
 
 config :telemetria,
+  backend: :telemetry,
   purge_level: :debug,
   level: :info,
   events: [
