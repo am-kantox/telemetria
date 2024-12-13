@@ -1,6 +1,4 @@
 defmodule Telemetria.Options do
-  @moduledoc false
-
   @log_levels if Version.match?(System.version(), ">= 1.11.0-dev"),
                 do: ~w|emergency alert critical error warning notice info debug|a,
                 else: ~w|error warn info debug|a
@@ -23,6 +21,7 @@ defmodule Telemetria.Options do
   end
 
   @spec mf(mf_tuple) :: {:ok, mf_tuple} | {:error, binary()} when mf_tuple: {module(), atom()}
+  @doc false
   def mf({mod, fun}) do
     if match?({:module, ^mod}, Code.ensure_compiled(mod)) && mod.__info__(:functions)[fun] == 4,
       do: {:ok, {mod, fun}},
@@ -31,6 +30,7 @@ defmodule Telemetria.Options do
   end
 
   @spec log_level(atom()) :: {:ok, atom()} | {:error, binary()}
+  @doc false
   def log_level(atom) when atom in @log_levels, do: {:ok, atom}
 
   def log_level(atom),
@@ -144,11 +144,18 @@ defmodule Telemetria.Options do
     ]
   ]
 
+  @moduledoc """
+  Options accepted by `Telemetria`.
+
+  #{NimbleOptions.docs(@schema)}
+  """
+
   @doc false
   @spec schema :: NimbleOptions.schema()
   def schema, do: @schema
 
   @spec initial :: keyword()
+  @doc false
   def initial,
     do: NimbleOptions.validate!(Application.get_all_env(:telemetria), Telemetria.Options.schema())
 end
