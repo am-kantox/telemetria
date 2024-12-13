@@ -3,10 +3,32 @@ defmodule Telemetria.Application do
 
   use Elixir.Application
 
-  @backend Application.compile_env(:telemetria, :backend, Telemetria.Backend.Telemetry)
+  @backend Application.compile_env(:telemetria, :backend, Telemetria.Backend.Logger)
+  if @backend == Telemetria.Backend.Logger,
+    do: IO.warn("No `:telemetria, :backend` config specified, falling back to `Logger`")
 
   @doc false
-  def backend, do: @backend
+  def backend, do: @backend |> fix_name() |> List.wrap()
+
+  defp fix_name(name) when is_atom(name) do
+    name
+    |> to_string()
+    |> Module.split()
+    |> case do
+      ["Telemetria", "Backend", _ | _] ->
+        name
+
+      _ ->
+        IO.warn(
+          "Please prefer `Telemetria.Backend.YourBackend` naming for telemetría backends, got: ‹#{inspect(name)}›"
+        )
+
+        name
+    end
+  rescue
+    _e in [ArgumentError] ->
+      Telemetria.Backend |> Module.concat(name |> to_string() |> Macro.camelize()) |> fix_name()
+  end
 
   @doc false
   def telemetry?, do: Telemetria.Backend.Telemetry in List.wrap(backend())

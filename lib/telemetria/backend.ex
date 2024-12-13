@@ -39,7 +39,7 @@ defmodule Telemetria.Backend do
 
   @optional_callbacks reshape: 1
 
-  @implementation Telemetria.Application.backend()
+  @implementation List.first(Telemetria.Application.backend()) || Telemetria.Backend.Logger
 
   case @implementation do
     module when is_atom(module) ->
