@@ -23,7 +23,7 @@ defmodule OtelTest do
 
     # nested span
     assert_receive {:span,
-                    {:span, _, _, {:tracestate, []}, link, "otel.do_f_to_c", :internal, _, _,
+                    {:span, _, _, {:tracestate, []}, parent_span_id, "otel.do_f_to_c", :internal, _, _,
                      {:attributes, 128, :infinity, 0,
                       %{
                         "args_fahrenheit" => 451,
@@ -48,12 +48,12 @@ defmodule OtelTest do
                         {:link, _, _, {:attributes, 128, :infinity, 0, %{}}, {:tracestate, []}}
                       ]}, :undefined, 1, false,
                      {:instrumentation_scope, "telemetria", _, :undefined}}}
-                   when is_integer(link),
+                   when is_integer(parent_span_id),
                    1000
 
     # parent span
     assert_receive {:span,
-                    {:span, _, _, {:tracestate, []}, :undefined, "otel.f_to_c", :internal, _, _,
+                    {:span, _, span_id, {:tracestate, []}, :undefined, "otel.f_to_c", :internal, _, _,
                      {:attributes, 128, :infinity, 0,
                       %{
                         "args_fahrenheit" => 451,
@@ -77,5 +77,7 @@ defmodule OtelTest do
                       ]}, {:links, 128, 128, :infinity, 1, []}, :undefined, 1, false,
                      {:instrumentation_scope, "telemetria", _, :undefined}}},
                    1000
+
+      assert parent_span_id == span_id
   end
 end
