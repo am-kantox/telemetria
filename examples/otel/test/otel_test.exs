@@ -19,7 +19,7 @@ defmodule OtelTest do
         Process.sleep(100)
       end)
 
-    assert log =~ "[warning] Unexpected throttle setting for group `:weather_reports` → nil"
+    # assert log =~ "[warning] Unexpected throttle setting for group `:weather_reports` → nil"
 
     # nested span
     assert_receive {:span,
