@@ -43,14 +43,21 @@ defmodule Telemetria.Backend do
 
   case @implementation do
     module when is_atom(module) ->
+      # credo:disable-for-lines:22 Credo.Check.Refactor.Apply
       @doc false
-      defdelegate entry(block_id), to: @implementation
+      def entry(block_id), do: apply(@implementation, :entry, [block_id])
+
       @doc false
-      defdelegate return(block_context, context), to: @implementation
+      def return(block_context, context),
+        do: apply(@implementation, :return, [block_context, context])
+
       @doc false
-      defdelegate update(block_context, updates), to: @implementation
+      def update(block_context, updates),
+        do: apply(@implementation, :update, [block_context, updates])
+
       @doc false
-      defdelegate exit(block_context), to: @implementation
+      def exit(block_context), do: apply(@implementation, :exit, [block_context])
+
       @doc false
       # credo:disable-for-lines:4 Credo.Check.Refactor.Apply
       def reshape(updates) do

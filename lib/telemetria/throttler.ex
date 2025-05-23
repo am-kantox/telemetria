@@ -28,7 +28,7 @@ defmodule Telemetria.Throttler do
 
   @impl GenServer
   def handle_cast({:event, group, event}, state) do
-    case Map.get(state.options, group) do
+    case Map.get(state.options, group, {0, :none}) do
       {_, :all} ->
         {:noreply, %{state | events: Map.update(state.events, group, [event], &[event | &1])}}
 
@@ -41,7 +41,11 @@ defmodule Telemetria.Throttler do
 
       some ->
         require Logger
-        Logger.warning("Unexpected throttle setting for group `:#{group}` → " <> inspect(some))
+
+        Logger.warning(
+          "Unexpected throttle setting for group `:#{inspect(group)}` → " <> inspect(some)
+        )
+
         do_execute(group, [event])
         {:noreply, state}
     end
