@@ -446,7 +446,8 @@ defmodule Telemetria do
         quote location: :keep, generated: true do
           now = [
             system: System.system_time(),
-            monotonic: System.monotonic_time(:microsecond),
+            monotonic: System.monotonic_time(:nanosecond),
+            unique_integer: :erlang.unique_integer([:monotonic]),
             utc: DateTime.utc_now()
           ]
 
@@ -455,7 +456,8 @@ defmodule Telemetria do
           result = unquote(block)
 
           if unquote(conditional).(result) do
-            benchmark = System.monotonic_time(:microsecond) - now[:monotonic]
+            benchmark_ns = System.monotonic_time(:nanosecond) - now[:monotonic]
+            benchmark = div(benchmark_ns, 1_000)
 
             attributes = %{
               env: unquote(caller),
@@ -469,7 +471,8 @@ defmodule Telemetria do
 
             Telemetria.Throttler.execute(
               unquote(group),
-              {unquote(event), %{system_time: now, consumed: benchmark}, attributes,
+              {unquote(event),
+               %{system_time: now, consumed: benchmark, consumed_ns: benchmark_ns}, attributes,
                unquote(reshape), unquote(messenger), block_ctx}
             )
 
