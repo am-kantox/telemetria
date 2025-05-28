@@ -18,12 +18,17 @@ defmodule Telemetria.Throttler do
 
   @impl GenServer
   def init(state) do
-    Enum.each(state.options, fn {group, {interval, kind}} ->
-      if kind in [:all, :last] and interval > 0,
-        do: Process.send_after(self(), {:work, group}, interval)
-    end)
+    events =
+      Enum.reduce(state.options, state.events, fn {group, {interval, kind}}, acc ->
+        if kind in [:all, :last] and interval > 0 do
+          Process.send_after(self(), {:work, group}, interval)
+          Map.put(acc, group, [])
+        else
+          acc
+        end
+      end)
 
-    {:ok, state}
+    {:ok, Map.put(state, :events, events)}
   end
 
   @impl GenServer
@@ -66,12 +71,7 @@ defmodule Telemetria.Throttler do
     {:noreply, %{state | events: Map.put(events, group, [])}}
   end
 
-  defp do_execute(group, nil) do
-    require Logger
-    Logger.warning("Wrong config for group: #{group}, skipping")
-  end
-
-  defp do_execute(group, {event, measurements, metadata, reshaper, messenger, block_ctx}) do
+  defp reshape_update(group, {event, measurements, metadata, reshaper, messenger, _block_ctx}) do
     {context, updates} =
       metadata
       |> Map.put(:telemetria_group, group)
@@ -86,17 +86,35 @@ defmodule Telemetria.Throttler do
 
     updates = if is_function(reshaper, 1), do: reshaper.(updates), else: updates
 
+    updates
+    |> Map.put(:context, context)
+    |> Telemetria.Backend.reshape()
+  end
+
+  defp do_execute(group, nil) do
+    require Logger
+    Logger.warning("Wrong config for group: #{group}, skipping")
+  end
+
+  defp do_execute(group, {event, measurements, metadata, reshaper, messenger, block_ctx}) do
     updates =
-      updates
-      |> Map.put(:context, context)
-      |> Telemetria.Backend.reshape()
+      reshape_update(group, {event, measurements, metadata, reshaper, messenger, block_ctx})
 
     Telemetria.Backend.return(block_ctx, updates)
   end
 
+  defp do_execute(_group, []), do: :ok
+
   defp do_execute(group, [event]),
     do: do_execute(group, event)
 
-  defp do_execute(group, events),
-    do: events |> Enum.reverse() |> Enum.each(&do_execute(group, &1))
+  defp do_execute(group, [{_, _, _, _, _, _block_ctx} | _] = events) do
+    events
+    |> Enum.reverse()
+    |> Enum.group_by(&elem(&1, 5))
+    |> Enum.each(fn {block_ctx, events} ->
+      updates = Enum.map(events, &reshape_update(group, &1))
+      Telemetria.Backend.return(block_ctx, updates)
+    end)
+  end
 end
