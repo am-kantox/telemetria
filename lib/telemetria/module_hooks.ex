@@ -168,6 +168,10 @@ defmodule Telemetria.Hooks do
 
   @spec fix_hooks([info()]) :: [info()]
   defp fix_hooks(hooks) do
+    head_mapper = fn %__MODULE__{} = node, %{options: options} = _head ->
+      %{node | annotation_type: :clause, options: options}
+    end
+
     hooks
     |> Enum.group_by(&{&1.fun, &1.arity})
     |> Enum.flat_map(fn {{_fun, _arity}, hooks} ->
@@ -177,8 +181,7 @@ defmodule Telemetria.Hooks do
       |> Enum.sort()
       |> case do
         [:head, :none] ->
-          [head | nones] = hooks
-          Enum.map(nones, &%__MODULE__{&1 | annotation_type: :clause, options: head.options})
+          with [head | nones] <- hooks, do: Enum.map(nones, &head_mapper.(&1, head))
 
         [:head | _] ->
           raise Telemetria.Error, "one cannot define both head and per-clause attributes"

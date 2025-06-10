@@ -2,7 +2,7 @@ defmodule Telemetria.MixProject do
   use Mix.Project
 
   @app :telemetria
-  @version "0.23.2"
+  @version "0.24.0"
 
   def project do
     [
