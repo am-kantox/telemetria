@@ -56,6 +56,8 @@ defmodule Telemetria.Hooks do
 
   @purge_level Application.compile_env(:telemetria, :purge_level, purge_level)
 
+  def purge_level, do: @purge_level
+
   def __on_definition__(env, kind, fun, args, guards, body) do
     case {Module.get_attribute(env.module, :telemetria), kind, body} do
       {options, kind, body} when kind in [:def, :defp] ->

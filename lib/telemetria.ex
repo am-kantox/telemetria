@@ -277,9 +277,9 @@ defmodule Telemetria do
 
   defmacro t(ast, opts), do: do_t(ast, opts, __CALLER__)
 
-  @compile {:inline, enabled?: 0, enabled?: 1}
+  @compile {:inline, enabled?: 1}
   @spec enabled?(opts :: keyword()) :: boolean()
-  defp enabled?(opts \\ []),
+  defp enabled?(opts),
     do: Keyword.get(opts, :enabled, Application.get_env(:telemetria, :enabled, true))
 
   @compile {:inline, do_t: 3}
@@ -379,7 +379,13 @@ defmodule Telemetria do
         {name, _, _} = var -> {name, var}
       end)
 
-    if enabled?() do
+    enabled_opts =
+      with level when not is_nil(level) <- get_in(context, [:options, :level]),
+           :lt <- Logger.compare_levels(level, Telemetria.Hooks.purge_level()),
+           do: [enabled: false],
+           else: (_ -> [])
+
+    if enabled?(enabled_opts) do
       {block, expr} =
         if Keyword.keyword?(expr) do
           Keyword.pop(expr, :do, [])
