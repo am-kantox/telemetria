@@ -12,6 +12,7 @@ defmodule Telemetria.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       consolidate_protocols: Mix.env() == :prod,
+      test_coverage: [summary: [threshold: 40]],
       xref: [exclude: []],
       description: description(),
       package: package(),
