@@ -24,7 +24,7 @@ defmodule Otel.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:opentelemetry_api, "~> 1.4"},
+      {:opentelemetry_api, "~> 1.4", override: true},
       {:opentelemetry, "~> 1.4"},
       {:telemetria, path: "../.."}
     ]
