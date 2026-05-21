@@ -176,6 +176,7 @@ defmodule Telemetria.Hooks do
       |> Enum.sort()
       |> case do
         [:head, :none] ->
+          # credo:disable-for-next-line
           with [head | nones] <- hooks, do: Enum.map(nones, &head_mapper.(&1, head))
 
         [:head | _] ->

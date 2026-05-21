@@ -1,6 +1,7 @@
 defmodule Telemetria.CoreTest do
   use ExUnit.Case
   import ExUnit.CaptureLog
+  alias Telemetria.Handler.Default, as: DefaultHandler
 
   describe "Telemetria.otp_app/0" do
     test "returns configured otp_app or a fallback" do
@@ -104,7 +105,7 @@ defmodule Telemetria.Handler.DefaultTest do
 
       log =
         capture_log(fn ->
-          Telemetria.Handler.Default.handle_event(
+          DefaultHandler.handle_event(
             [:test, :handler, :event],
             %{consumed: 100},
             %{result: :ok, args: [x: 1], env: %{module: Foo, function: {:bar, 1}}},
@@ -121,7 +122,7 @@ defmodule Telemetria.Handler.DefaultTest do
 
       log =
         capture_log(fn ->
-          Telemetria.Handler.Default.handle_event(
+          DefaultHandler.handle_event(
             [:test, :filtered],
             %{consumed: 50},
             %{

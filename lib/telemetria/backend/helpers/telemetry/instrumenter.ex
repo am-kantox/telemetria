@@ -5,8 +5,6 @@ case {Telemetria.Application.telemetry?(), Code.ensure_compiled(:telemetry)} do
 
       alias Telemetria.{ConfigProvider, Handler}
 
-      require Logger
-
       @behaviour Handler
 
       @spec setup :: :ok | {:error, :already_exists}

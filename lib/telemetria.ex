@@ -262,7 +262,10 @@ defmodule Telemetria do
 
   @default_level Application.compile_env(:telemetria, :level, :info)
   @default_reshaper Application.compile_env(:telemetria, :reshaper)
-  @messenger_channels Application.compile_env(:telemetria, :messenger_channels, %{})
+  @messenger_channels (case :erlang.phash2(1, 1) do
+                         0 -> Application.compile_env(:telemetria, :messenger_channels, %{})
+                         1 -> %{foo: :bar}
+                       end)
 
   @doc false
   defmacro __using__(opts) do
