@@ -262,10 +262,7 @@ defmodule Telemetria do
 
   @default_level Application.compile_env(:telemetria, :level, :info)
   @default_reshaper Application.compile_env(:telemetria, :reshaper)
-  @messenger_channels (case :erlang.phash2(1, 1) do
-                         0 -> Application.compile_env(:telemetria, :messenger_channels, %{})
-                         1 -> %{foo: :bar}
-                       end)
+  @messenger_channels Application.compile_env(:telemetria, :messenger_channels, %{})
 
   @doc false
   defmacro __using__(opts) do
@@ -561,8 +558,11 @@ defmodule Telemetria do
   defp variablize({:%{}, _, elems}), do: {:map, Enum.map(elems, &variablize/1)}
   defp variablize({var, _, _} = val), do: {var, val}
 
+  defp messenger_channels,
+    do: Application.get_env(:telemetria, :messenger_channels, @messenger_channels)
+
   defp get_channel_info(channel, level) do
-    case Map.get(@messenger_channels, channel, {channel, []}) do
+    case Map.get(messenger_channels(), channel, {channel, []}) do
       {mod, opts} -> {mod, Keyword.put(opts, :level, level)}
       mod when is_atom(mod) -> {mod, level: level}
     end

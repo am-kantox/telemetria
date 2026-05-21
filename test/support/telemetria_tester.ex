@@ -61,7 +61,7 @@ defmodule Test.Telemetria.Example do
                 result: &__MODULE__.transform_result/1
               ],
               reshape: &Test.Telemetria.Example.reshape/1
-  defp annotated_2(i) when (is_integer(i) and i == 42) or is_nil(i), do: i || 42
+  defp annotated_2(i) when is_integer(i) and i == 42, do: 42
 
   @telemetria level: :error, if: &Test.Telemetria.S.allow?/1
   defp annotated_2(i), do: i && :forty_two

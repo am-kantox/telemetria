@@ -1,7 +1,6 @@
 defmodule Telemetria.CoreTest do
   use ExUnit.Case
   import ExUnit.CaptureLog
-  alias Telemetria.Handler.Default, as: DefaultHandler
 
   describe "Telemetria.otp_app/0" do
     test "returns configured otp_app or a fallback" do
@@ -98,6 +97,7 @@ end
 defmodule Telemetria.Handler.DefaultTest do
   use ExUnit.Case
   import ExUnit.CaptureLog
+  alias Telemetria.Handler.Default, as: DefaultHandler
 
   describe "handle_event/4" do
     test "logs telemetry event with default (non-smart) format" do
