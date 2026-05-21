@@ -33,6 +33,6 @@ defmodule Telemetria.Mix.Events do
 
   @doc false
   @spec json_config_path :: binary()
-  {:compile, inline: [json_config_path: 0]}
+  @compile {:inline, json_config_path: 0}
   def json_config_path, do: @json_config_path
 end

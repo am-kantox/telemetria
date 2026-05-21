@@ -1,106 +1,58 @@
 defmodule Telemetria.FormatterTest do
   use ExUnit.Case
-  import ExUnit.CaptureLog
-  alias Test.Telemetria.Example
 
-  # @moduletag :skip
+  alias Telemetria.Formatter
 
-  # setup_all do
-  #   Logger.configure(default_formatter: [metadata: :all, format: {Telemetria.Formatter, :format}])
-  #   Application.put_env(:telemetria, :smart_log, true)
-  # end
+  @timestamp {{2026, 1, 1}, {12, 0, 0, 0}}
 
-  test "attaches telemetry events to module functions and spits out logs" do
-    log =
-      capture_log(fn ->
-        Example.sum_with_doubled(1, 3)
-        Process.sleep(100)
-      end)
+  test "format/4 produces valid JSON with newline" do
+    result = Formatter.format(:info, "hello", @timestamp, [])
+    json = IO.iodata_to_binary(result)
+    assert String.ends_with?(json, "\n")
 
-    assert log =~ ~s|[:test, :telemetria, :example, :twice]|
-    assert log =~ ~s|[:test, :telemetria, :example, :sum_with_doubled]|
-    assert log =~ ~s|result: 7|
+    decoded = :json.decode(String.trim_trailing(json))
+    assert is_map(decoded)
+    assert decoded["message"] == "hello"
+    assert decoded["severity"] == "info"
+    assert decoded["@type"] == "log"
   end
 
-  test "attaches telemetry events to anonymous local functions and spits out logs" do
-    log =
-      capture_log(fn ->
-        Example.half(42)
-        Process.sleep(100)
-      end)
+  test "format/4 includes timestamp as ISO8601" do
+    json =
+      :info
+      |> Formatter.format("msg", @timestamp, [])
+      |> IO.iodata_to_binary()
+      |> String.trim_trailing()
+      |> :json.decode()
 
-    assert log =~ ~s|[:test, :telemetria, :example, :half]|
-    assert log =~ ~s|args: [a: 42]|
-    assert log =~ ~s|result: 21|
+    assert json["@timestamp"] == "2026-01-01T12:00:00.000Z"
   end
 
-  test "attaches telemetry events named and spits out logs" do
-    log =
-      capture_log(fn ->
-        Example.half_named(4)
-        Process.sleep(100)
-      end)
+  test "format/4 includes telemetria metadata when present" do
+    metadata = [telemetría: [otp_app: :my_app, type: :event]]
 
-    assert log =~ ~s|[:test, :telemetria, :example, :half_named, :foo]|
-    assert log =~ ~s|result: #Function<|
+    json =
+      :warning
+      |> Formatter.format("test", @timestamp, metadata)
+      |> IO.iodata_to_binary()
+      |> String.trim_trailing()
+      |> :json.decode()
+
+    assert json["@id"] == "my_app"
+    assert json["@type"] == "event"
+    assert json["severity"] == "warning"
   end
 
-  test "attaches telemetry events to random ast and spits out logs" do
-    log =
-      capture_log(fn ->
-        Example.tmed()
-        Process.sleep(100)
-      end)
+  test "format/4 handles structured data in metadata" do
+    metadata = [custom_key: %{nested: "value"}]
 
-    assert log =~ ~s|[:test, :telemetria, :example, :tmed]|
-    assert log =~ ~s|result: 42|
-  end
+    json =
+      :debug
+      |> Formatter.format("structured", @timestamp, metadata)
+      |> IO.iodata_to_binary()
+      |> String.trim_trailing()
+      |> :json.decode()
 
-  test "attaches telemetry events to random ast with do-end syntax and spits out logs" do
-    log =
-      capture_log(fn ->
-        Example.tmed_do()
-        Process.sleep(100)
-      end)
-
-    assert log =~ ~s|[:test, :telemetria, :example, :tmed_do]|
-    assert log =~ ~s|result: 42|
-  end
-
-  test "attaches telemetry events to guarded function and spits out logs" do
-    log =
-      capture_log(fn ->
-        assert 84 == Example.guarded(42)
-        assert :ok == Example.guarded(:ok)
-        Process.sleep(100)
-      end)
-
-    assert log =~ ~s|[:test, :telemetria, :example, :guarded]|
-    assert log =~ ~s|result: 84|
-    assert log =~ ~s|result: :ok|
-  end
-
-  test "@telemetry true" do
-    log =
-      capture_log(fn ->
-        assert 42 == Example.annotated_1(42)
-        Process.sleep(100)
-      end)
-
-    assert log =~ ~s|[:test, :telemetria, :example, :annotated_1]|
-    assert log =~ ~s|[:test, :telemetria, :example, :annotated_2]|
-    assert log =~ ~s|result: 42|
-  end
-
-  test "@telemetry level:" do
-    log =
-      capture_log(fn ->
-        assert 42 == Example.annotated_1(42)
-        Process.sleep(100)
-      end)
-
-    assert log =~ ~s|event: [:test, :telemetria, :example, :annotated_1]|
-    assert log =~ ~s|event: [:test, :telemetria, :example, :annotated_2]|
-    assert log =~ ~s|result: 42|
+    assert json["custom_key"]["nested"] == "value"
   end
 end

@@ -1,7 +1,7 @@
 defmodule Telemetria.Application do
   @moduledoc false
 
-  use Elixir.Application
+  use Application
 
   @backend Application.compile_env(:telemetria, :backend, Telemetria.Backend.Logger)
   if @backend == Telemetria.Backend.Logger,
@@ -36,7 +36,7 @@ defmodule Telemetria.Application do
   @doc false
   def open_telemetry?, do: Telemetria.Backend.OpenTelemetry in List.wrap(backend())
 
-  @impl Elixir.Application
+  @impl Application
   def start(_type, _args) do
     Application.ensure_all_started(:inets)
     Application.ensure_all_started(:ssl)

@@ -1,7 +1,5 @@
 defmodule Telemetria.Options do
-  @log_levels if Version.match?(System.version(), ">= 1.11.0-dev"),
-                do: ~w|emergency alert critical error warning notice info debug|a,
-                else: ~w|error warn info debug|a
+  @log_levels ~w|emergency alert critical error warning notice info debug|a
 
   @spec list([any()], [{module(), atom()} | {module(), atom(), [any()]}]) ::
           {:ok, [any()]} | {:error, binary()}
@@ -160,4 +158,7 @@ defmodule Telemetria.Options do
     do: NimbleOptions.validate!(Application.get_all_env(:telemetria), Telemetria.Options.schema())
 end
 
+# Validate config at compile time to fail fast on misconfiguration.
+# Consumer projects will see a clear error during compilation if their
+# :telemetria config does not conform to the expected schema.
 NimbleOptions.validate!(Application.get_all_env(:telemetria), Telemetria.Options.schema())

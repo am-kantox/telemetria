@@ -10,9 +10,7 @@ defmodule Telemetria.ConfigProvider do
 
   @impl Config.Provider
   def load(config, path) do
-    {:ok, _} = Application.ensure_all_started(:jason)
-
-    json = path |> File.read!() |> Jason.decode!()
+    json = path |> File.read!() |> :json.decode()
 
     Config.Reader.merge(
       config,
@@ -32,7 +30,7 @@ defmodule Telemetria.ConfigProvider do
     |> if do
       with {:ok, json} <- File.read(path) do
         json
-        |> Jason.decode!()
+        |> :json.decode()
         |> maybe_atomize()
         |> Map.to_list()
       end

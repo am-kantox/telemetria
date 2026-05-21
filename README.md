@@ -4,23 +4,34 @@
 
 ## Installation
 
+Requires Elixir ~> 1.17 and OTP 27+.
+
 ```elixir
 def project do
   [
-    compilers: [:telemetria | Mix.compilers()]
+    compilers: [:telemetria]
   ]
 end
 
 def deps do
   [
-    {:telemetria, "~> 0.1"}
+    {:telemetria, "~> 0.24"}
   ]
 end
 ```
 
 ## Changelog
 
-- **`0.22.0`** —
+- **`0.24.0`** --
+  - [UPD] compatibility with Elixir 1.19 / OTP 28
+  - [UPD] `purge_level` is now respected in function wrapper
+- **`0.23.2`** --
+  - [UPD] bulk reports
+- **`0.23.1`** --
+  - [UPD] added nanoseconds to benchmark
+- **`0.23.0`** --
+  - [UPD] improvements for `Persistomata` integration
+- **`0.22.0`** --
   - [FIX] bug fix for `finitomata` integration
 - **`0.21.0`** —
   - [UPD] support for external messengers (slack)
@@ -39,7 +50,7 @@ end
 - **`0.15.0`** —
   - [UPD] Elixir v1.16
 - **`0.14.2`** —
-  - [ENH] `process_info: boolean()` option to embed the process info into each telemtry event 
+  - [ENH] `process_info: boolean()` option to embed the process info into each telemetry event 
 - **`0.14.1`** —
   - [ENH] Propagate `custom_options: [from: :telemetria]` down to inspect
 - **`0.14.0`** —

@@ -17,11 +17,7 @@ defmodule Telemetria.Hooks do
     * `:info` - for information of any kind
     * `:debug` - for debug-related messages
   """
-  if Version.match?(System.version(), ">= 1.11.0-dev") do
-    @type level :: :emergency | :alert | :critical | :error | :warning | :notice | :info | :debug
-  else
-    @type level :: :error | :warn | :info | :debug
-  end
+  @type level :: :emergency | :alert | :critical | :error | :warning | :notice | :info | :debug
 
   @typedoc false
   @type option :: {:level, level()} | {:inspect_opts, Inspect.Opts.t()} | {atom(), any()}
@@ -49,10 +45,7 @@ defmodule Telemetria.Hooks do
     get_in(Application.compile_env(:logger, :compile_time_purge_matching), [:level_lower_than]) ||
       Logger.level()
 
-  purge_level =
-    if purge_level == :warn and Version.match?(System.version(), ">= 1.11.0-dev"),
-      do: :warning,
-      else: purge_level
+  purge_level = if purge_level == :warn, do: :warning, else: purge_level
 
   @purge_level Application.compile_env(:telemetria, :purge_level, purge_level)
 

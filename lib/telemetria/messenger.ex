@@ -48,9 +48,9 @@ defmodule Telemetria.Messenger do
       message =
         """
         One or more required options were missing for the call to the messenger implementation
-        in `telemetría` module attribute (or global config.)
+        in `telemetria` module attribute (or global config.)
 
-        For now this is rescued and application can continue, but messenging from telemetria won’t work.
+        For now this is rescued and application can continue, but messaging from telemetria won't work.
 
         Error: #{e.message}.
         """
@@ -62,9 +62,9 @@ defmodule Telemetria.Messenger do
 
       message =
         """
-        The unexpected runtime error occured. Usually it means the config in `runtime.exs`
-        is diverged from what `telemetría` compliler saw. Please move all the config to the
-        compile-time configurations files since `telemetría` needs them during a compilation stage.
+        The unexpected runtime error occurred. Usually it means the config in `runtime.exs`
+        is diverged from what `telemetria` compiler saw. Please move all the config to the
+        compile-time configurations files since `telemetria` needs them during a compilation stage.
 
         Error: #{e.message}
         """

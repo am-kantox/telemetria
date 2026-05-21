@@ -80,13 +80,10 @@ defmodule Telemetria.Messenger.Slack do
   end)
 
   defp post(level, message, opts) when is_binary(message) do
-    case Jason.decode(message) do
-      {:ok, json} ->
-        post(level, json, opts)
-
-      {:error, error} ->
-        post(level, %{error: inspect(error), fallback: message, description: message}, opts)
-    end
+    json = :json.decode(message)
+    post(level, json, opts)
+  rescue
+    _ -> post(level, %{error: "invalid JSON", fallback: message, description: message}, opts)
   end
 
   defp post(level, %{} = message, opts) do
@@ -94,7 +91,8 @@ defmodule Telemetria.Messenger.Slack do
       message
       |> put_in([:emoji_icon], slack_icon(level))
       |> put_in([:attachments, Access.all(), :color], slack_color(level))
-      |> Jason.encode!()
+      |> :json.encode()
+      |> IO.iodata_to_binary()
       |> :erlang.binary_to_list()
 
     url = Keyword.fetch!(opts, :url)

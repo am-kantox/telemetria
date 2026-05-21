@@ -93,7 +93,7 @@ defmodule Telemetria do
     def project do
       [
         # ...
-        compilers: [:telemetria | Mix.compilers()],
+        compilers: [:telemetria],
         # ...
       ]
     end
@@ -110,7 +110,7 @@ defmodule Telemetria do
   def project do
     [
       ...
-      compilers: [:telemetria | Mix.compilers()],
+      compilers: [:telemetria],
       ...
     ]
   end

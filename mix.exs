@@ -8,9 +8,8 @@ defmodule Telemetria.MixProject do
     [
       app: @app,
       version: @version,
-      elixir: "~> 1.12",
+      elixir: "~> 1.17",
       elixirc_paths: elixirc_paths(Mix.env()),
-      compilers: compilers(Mix.env()),
       start_permanent: Mix.env() == :prod,
       consolidate_protocols: Mix.env() == :prod,
       xref: [exclude: []],
@@ -45,13 +44,13 @@ defmodule Telemetria.MixProject do
       {:opentelemetry_api, "~> 1.4", optional: true},
       # helpers
       {:estructura, "~> 1.6"},
-      {:jason, "~> 1.0"},
+      {:jason, "~> 1.0", optional: true},
       {:nimble_options, "~> 1.0"},
       # dev / test
       {:mox, "~> 1.0", only: [:dev, :test, :ci]},
       {:dialyxir, "~> 1.0", only: [:dev, :test, :ci], runtime: false},
       {:credo, "~> 1.0", only: [:dev, :ci], runtime: false},
-      {:ex_doc, "~> 0.11", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.37", only: :dev, runtime: false}
     ]
   end
 
@@ -110,8 +109,6 @@ defmodule Telemetria.MixProject do
       ]
     ]
   end
-
-  def compilers(_), do: Mix.compilers()
 
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(:ci), do: ["lib", "test/support"]

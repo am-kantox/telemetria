@@ -28,7 +28,7 @@ jobs:
           epmd -daemon
       - name: Run tests
         run: |
-          MIX_ENV=test mix test
+          MIX_ENV=test mix test --cover
       - name: Run tests with Telemetry
         run: |
           cd examples/tm

@@ -92,7 +92,10 @@ defmodule Mix.Tasks.Compile.Telemetria do
   defp do_store_config(nil), do: {:error, :manifest_missing}
 
   defp do_store_config(manifest) do
-    json = Jason.encode!(%{otp_app: app_name(), events: Enum.flat_map(manifest, &elem(&1, 1))})
+    json =
+      %{otp_app: app_name(), events: Enum.flat_map(manifest, &elem(&1, 1))}
+      |> :json.encode()
+      |> IO.iodata_to_binary()
 
     File.mkdir_p!(Path.dirname(Events.json_config_path()))
     File.write(Events.json_config_path(), json)

@@ -58,11 +58,7 @@ defmodule Telemetria.Throttler do
 
   @impl GenServer
   def handle_info({:work, group}, %{events: events} = state) do
-    group_events =
-      case Enum.find(events, &match?({^group, _}, &1)) do
-        {^group, events} -> events
-        _ -> nil
-      end
+    group_events = Map.get(events, group)
 
     do_execute(group, group_events)
 

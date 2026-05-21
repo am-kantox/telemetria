@@ -34,7 +34,7 @@ defmodule Telemetria.Formatter do
          process_info: process_info
        ] ++ metadata)
       |> do_format(inspect_opts)
-      |> Jason.encode_to_iodata!()
+      |> :json.encode()
 
     [payload, ?\n]
   end
