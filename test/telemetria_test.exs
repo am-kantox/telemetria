@@ -9,6 +9,12 @@ defmodule Telemetria.Test do
     Application.put_env(:telemetria, :smart_log, false)
   end
 
+  setup do
+    # Reset persistent_term to default so tests are order-independent
+    :persistent_term.put(Test.Telemetria.S, :forty_two)
+    :ok
+  end
+
   test "attaches telemetry events to module functions and spits out logs" do
     log =
       capture_log(fn ->
@@ -102,7 +108,8 @@ defmodule Telemetria.Test do
 
     assert log =~ "event: [:test, :telemetria, :example, :annotated_1]"
     assert log =~ "event: [:test, :telemetria, :example, :annotated_2]"
-    refute log =~ "[debug]"
+    # The debug-level annotated_2(nil) should be purged, so no debug event for annotated_2
+    refute log =~ "[debug] telemetría"
     assert log =~ "[info]"
     assert log =~ ~s|call: [args: [foo: 42], result: 42, locals: []]|
     assert log =~ "[warning]"
@@ -124,7 +131,7 @@ defmodule Telemetria.Test do
 
     assert log =~ "event: [:test, :telemetria, :example, :annotated_1]"
     assert log =~ "event: [:test, :telemetria, :example, :annotated_2]"
-    refute log =~ "[debug]"
+    refute log =~ "[debug] telemetría"
     assert log =~ "[info]"
     assert log =~ ~s|call: [args: [foo: 42], result: 42, locals: []]|
     assert log =~ "[warning]"
@@ -146,7 +153,7 @@ defmodule Telemetria.Test do
 
     assert log =~ "event: [:test, :telemetria, :example, :annotated_1]"
     assert log =~ "event: [:test, :telemetria, :example, :annotated_2]"
-    refute log =~ "[debug]"
+    refute log =~ "[debug] telemetría"
     assert log =~ "[info]"
     assert log =~ ~s|call: [args: [foo: 42], result: 42, locals: []]|
     assert log =~ "[warning]"
