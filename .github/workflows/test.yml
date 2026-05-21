@@ -1,41 +1,98 @@
-name: Test
+name: CI
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
 
 jobs:
   test:
+    name: Test (Elixir ${{matrix.pair.elixir}} / OTP ${{matrix.pair.otp}})
     runs-on: ubuntu-latest
-    name: OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}}
     strategy:
+      fail-fast: false
       matrix:
         include:
           - pair:
-              otp: 27
-              elixir: 1.17
+              otp: "27"
+              elixir: "1.17"
+          - pair:
+              otp: "28"
+              elixir: "1.18"
     steps:
       - uses: actions/checkout@v4
-      - uses: erlef/setup-elixir@v1
+      - uses: erlef/setup-beam@v1
         with:
           otp-version: ${{matrix.pair.otp}}
           elixir-version: ${{matrix.pair.elixir}}
-      - name: Install → Compile dependencies
-        run: |
-          MIX_ENV=test mix deps.get
-          MIX_ENV=test mix deps.compile
-          MIX_ENV=test mix compile
-      - name: Start epmd
-        run: |
-          epmd -daemon
+      - name: Restore dependencies cache
+        uses: actions/cache@v4
+        with:
+          path: deps
+          key: deps-${{ runner.os }}-${{matrix.pair.otp}}-${{matrix.pair.elixir}}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: deps-${{ runner.os }}-${{matrix.pair.otp}}-${{matrix.pair.elixir}}-
+      - name: Install dependencies
+        run: mix deps.get
+      - name: Compile
+        run: MIX_ENV=test mix compile --warnings-as-errors
       - name: Run tests
-        run: |
-          MIX_ENV=test mix test --cover
+        run: MIX_ENV=test mix test --cover
       - name: Run tests with Telemetry
         run: |
           cd examples/tm
-          MIX_ENV=test mix deps.get
+          mix deps.get
           MIX_ENV=test mix test
       - name: Run tests with OpenTelemetry
         run: |
           cd examples/otel
-          MIX_ENV=test mix deps.get
+          mix deps.get
           MIX_ENV=test mix test
+
+  linters:
+    name: Static Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: erlef/setup-beam@v1
+        id: beam
+        with:
+          otp-version: "27"
+          elixir-version: "1.17"
+      - name: Restore dependencies cache
+        uses: actions/cache@v4
+        with:
+          path: deps
+          key: deps-${{ runner.os }}-27-1.17-${{ hashFiles('**/mix.lock') }}
+          restore-keys: deps-${{ runner.os }}-27-1.17-
+      - name: Restore PLT cache
+        uses: actions/cache@v4
+        with:
+          path: .dialyzer
+          key: plt-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: plt-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-
+      - name: Install dependencies
+        run: |
+          MIX_ENV=ci mix deps.get
+          MIX_ENV=ci mix compile
+      - name: Run format check
+        run: mix format --check-formatted
+      - name: Run Credo
+        run: MIX_ENV=ci mix credo --strict
+      - name: Run Dialyzer
+        run: MIX_ENV=ci mix dialyzer
+
+  quality:
+    name: Quality Gate
+    runs-on: ubuntu-latest
+    needs: [test, linters]
+    if: always()
+    steps:
+      - name: Check all jobs
+        run: |
+          if [ "${{ needs.test.result }}" != "success" ] || \
+             [ "${{ needs.linters.result }}" != "success" ]; then
+            echo "Quality gate failed"
+            exit 1
+          fi
+          echo "Quality gate passed"

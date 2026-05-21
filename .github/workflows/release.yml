@@ -1,0 +1,81 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Publish Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          otp-version: "27"
+          elixir-version: "1.17"
+
+      - name: Restore dependencies cache
+        uses: actions/cache@v4
+        with:
+          path: deps
+          key: deps-${{ runner.os }}-27-1.17-${{ hashFiles('**/mix.lock') }}
+          restore-keys: deps-${{ runner.os }}-27-1.17-
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Compile
+        run: MIX_ENV=prod mix compile
+
+      - name: Build docs
+        run: mix docs
+
+      - name: Get version
+        id: version
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          else
+            echo "version=$(grep '@version' mix.exs | sed 's/.*"\(.*\)".*/\1/')" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          body: |
+            ## Telemetria v${{ steps.version.outputs.version }}
+
+            ### Installation
+
+            ```elixir
+            def deps do
+              [{:telemetria, "~> ${{ steps.version.outputs.version }}"}]
+            end
+            ```
+
+            ### Links
+
+            - [Documentation](https://hexdocs.pm/telemetria/${{ steps.version.outputs.version }})
+            - [Hex.pm](https://hex.pm/packages/telemetria/${{ steps.version.outputs.version }})
+            - [Changelog](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/README.md#changelog)
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to Hex.pm
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
+        run: |
+          mix hex.publish --yes || echo "Hex publish skipped (set HEX_API_KEY secret to enable)"
