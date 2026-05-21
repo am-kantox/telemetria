@@ -18,8 +18,20 @@ jobs:
               otp: "27"
               elixir: "1.17"
           - pair:
+              otp: "27"
+              elixir: "1.18"
+          - pair:
               otp: "28"
               elixir: "1.18"
+          - pair:
+              otp: "28"
+              elixir: "1.19"
+          - pair:
+              otp: "29"
+              elixir: "1.19"
+          - pair:
+              otp: "29"
+              elixir: "1.20.0-rc.5"
     steps:
       - uses: actions/checkout@v4
       - uses: erlef/setup-beam@v1
@@ -57,14 +69,14 @@ jobs:
       - uses: erlef/setup-beam@v1
         id: beam
         with:
-          otp-version: "27"
-          elixir-version: "1.17"
+          otp-version: "29"
+          elixir-version: "1.20.0-rc.5"
       - name: Restore dependencies cache
         uses: actions/cache@v4
         with:
           path: deps
-          key: deps-${{ runner.os }}-27-1.17-${{ hashFiles('**/mix.lock') }}
-          restore-keys: deps-${{ runner.os }}-27-1.17-
+          key: deps-${{ runner.os }}-29-1.20.0-rc.5-${{ hashFiles('**/mix.lock') }}
+          restore-keys: deps-${{ runner.os }}-29-1.20.0-rc.5-
       - name: Restore PLT cache
         uses: actions/cache@v4
         with:
