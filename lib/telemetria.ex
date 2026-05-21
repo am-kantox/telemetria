@@ -56,22 +56,65 @@ defmodule Telemetria do
     management, several channels config with channels names associated with their
     implementations and properties
 
-  ### Example
+  ### Simple example
 
   The following code would emit the telemetry event for the function `weather`,
-    returning `result` in Celcius _and_ injecting `farenheit` value under `locals`
+    returning `result` in Celsius _and_ injecting `fahrenheit` value under `locals`
 
   ```elixir
   defmodule Forecast do
     use Telemetria
 
-    @telemetria level: :info, group: :weather_reports, locals: [:farenheit]
+    @telemetria level: :info, group: :weather_reports, locals: [:fahrenheit]
     def weather(city) do
       fahrenheit = ExternalService.retrieve(city)
-      Converter.fahrenheit_to_celcius(fahrenheit)
+      Converter.fahrenheit_to_celsius(fahrenheit)
     end
   end
   ```
+
+  ### Comprehensive example
+
+  The following example demonstrates all available `@telemetria` parameters
+  used together:
+
+  ```elixir
+  defmodule MyApp.Payments do
+    use Telemetria
+
+    # Assuming config:
+    #   config :telemetria,
+    #     throttle: %{payments: {5_000, :last}},
+    #     messenger_channels: %{slack: {:slack, url: "https://hooks.slack.com/..."}}
+
+    @telemetria level: :warning,
+                if: &match?({:ok, _}, &1),
+                group: :payments,
+                locals: [:amount_cents, :currency],
+                transform: [
+                  args: fn args -> Keyword.drop(args, [:card_token]) end,
+                  result: &elem(&1, 1)
+                ],
+                reshape: fn meta ->
+                  Map.take(meta, [:result, :args, :locals, :measurements])
+                end,
+                messenger: :slack
+    def charge(user_id, amount_cents, currency, card_token) do
+      result = Gateway.charge(card_token, amount_cents, currency)
+      {:ok, %{user_id: user_id, status: result}}
+    end
+  end
+  ```
+
+  This single annotation:
+
+  - **`level: :warning`** -- only emits when the configured purge level permits `:warning`
+  - **`if: &match?({:ok, _}, &1)`** -- emits only when the function returns `{:ok, _}`
+  - **`group: :payments`** -- throttles events in the `:payments` group (5s window, last event only)
+  - **`locals: [:amount_cents, :currency]`** -- captures the values of these local variables
+  - **`transform: [args: ..., result: ...]`** -- redacts `card_token` from args, extracts the value from the `{:ok, value}` tuple
+  - **`reshape: fn meta -> ... end`** -- strips the event payload down to essential fields
+  - **`messenger: :slack`** -- sends the event to the configured Slack channel
 
   ## Advantages
 

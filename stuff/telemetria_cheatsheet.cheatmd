@@ -1,0 +1,282 @@
+# Telemetria Cheatsheet
+
+## Setup
+
+### mix.exs
+
+```elixir
+def project do
+  [
+    compilers: [:telemetria],
+    deps: deps()
+  ]
+end
+
+defp deps do
+  [{:telemetria, "~> 0.24"}]
+end
+```
+
+### config.exs
+
+```elixir
+import Config
+
+config :telemetria,
+  backend: :telemetry,
+  purge_level: :debug,
+  level: :info,
+  events: [[:my_app, :my_module, :my_function]],
+  throttle: %{my_group: {1_000, :last}}
+```
+
+## Module Attribute `@telemetria`
+{: .col-2}
+
+### Basic usage
+
+```elixir
+defmodule MyApp.Worker do
+  use Telemetria
+
+  @telemetria true
+  def process(data), do: do_work(data)
+end
+```
+
+Wraps the function with telemetry, measuring execution time.
+
+### With logging level
+
+```elixir
+@telemetria level: :warning
+def important(data), do: handle(data)
+```
+
+Only emits the event when the configured `purge_level` allows `:warning` or above.
+
+### With compile-time condition
+
+```elixir
+@telemetria if: Mix.env() == :prod
+def prod_only(data), do: data
+```
+
+Telemetry code is included/excluded at compile time.
+
+### With runtime condition
+
+```elixir
+@telemetria if: &match?({:ok, _}, &1)
+def maybe_report(input) do
+  {:ok, process(input)}
+end
+```
+
+The event is emitted only when the `if` function returns `true` for the result.
+
+## Attribute Parameters
+{: .col-2}
+
+### Export local variables
+
+```elixir
+@telemetria locals: [:celsius, :source]
+def temperature(city) do
+  source = :weather_api
+  celsius = fetch_temp(city)
+  celsius
+end
+```
+
+Captures the values of local variables and includes them in the telemetry event metadata.
+
+### Throttled events
+
+```elixir
+# config.exs
+config :telemetria,
+  throttle: %{api_calls: {5_000, :last}}
+
+# module
+@telemetria group: :api_calls
+def call_api(params), do: HTTPClient.get(params)
+```
+
+Events in the `:api_calls` group are throttled: only the last event per 5-second window is emitted.
+
+### Transform args and result
+
+```elixir
+@telemetria transform: [
+  args: &Enum.map(&1, fn {k, _} -> k end),
+  result: &inspect/1
+]
+def sensitive(credentials) do
+  authenticate(credentials)
+end
+```
+
+Applies transformation functions to arguments and/or results before they reach the telemetry handler. Useful for redacting sensitive data.
+
+### Reshape the event
+
+```elixir
+@telemetria reshape: &Map.take(&1, [:result, :args])
+def compute(x), do: x * x
+```
+
+Reshapes the entire event payload before sending. Receives the full metadata map.
+
+### Send to messenger
+
+```elixir
+# config.exs
+config :telemetria,
+  messenger_channels: %{
+    slack: {:slack, url: "https://hooks.slack.com/..."}
+  }
+
+# module
+@telemetria messenger: :slack, level: :error
+def critical_operation(input) do
+  risky_work(input)
+end
+```
+
+Routes the event to the configured messenger channel (e.g. Slack) in addition to the telemetry backend.
+
+### All parameters at once
+
+```elixir
+@telemetria level: :info,
+            if: &match?({:ok, _}, &1),
+            group: :reports,
+            locals: [:duration],
+            transform: [result: &elem(&1, 1)],
+            reshape: &Map.drop(&1, [:context]),
+            messenger: :slack
+def generate_report(params) do
+  duration = measure(fn -> build(params) end)
+  {:ok, format(duration)}
+end
+```
+
+## Macros
+{: .col-2}
+
+### `deft/2` -- public function
+
+```elixir
+import Telemetria
+
+deft add(a, b) do
+  a + b
+end
+```
+
+Equivalent to `def` but with telemetry attached.
+
+### `defpt/2` -- private function
+
+```elixir
+import Telemetria
+
+defpt multiply(a, b) do
+  a * b
+end
+```
+
+Equivalent to `defp` but with telemetry attached.
+
+### `t/1` -- wrap expression
+
+```elixir
+import Telemetria
+
+def work do
+  result = t(expensive_computation())
+  result
+end
+```
+
+Wraps a single expression with telemetry.
+
+### `t/1` -- wrap block
+
+```elixir
+import Telemetria
+
+def work do
+  t do
+    step_1()
+    step_2()
+  end
+end
+```
+
+Wraps a `do`-block with telemetry.
+
+### `t/2` -- with suffix
+
+```elixir
+t(&(&1 * 2), suffix: :doubler)
+```
+
+Appends `:doubler` to the event name for disambiguation.
+
+### `t/1` -- anonymous function clauses
+
+```elixir
+divider =
+  t(fn
+    x when is_integer(x) -> x / 2
+    _ -> nil
+  end)
+
+divider.(42) #=> 21.0
+```
+
+Each clause of the anonymous function gets its own telemetry event.
+
+## Application Config
+{: .col-2}
+
+### Backends
+
+| Value | Description |
+| --- | --- |
+| `:telemetry` | Standard `:telemetry` (requires `{:telemetry, "~> 1.0"}`) |
+| `:open_telemetry` | OpenTelemetry spans (requires `{:opentelemetry_api, "~> 1.4"}`) |
+| `:logger` | Fallback: logs events via `Logger` |
+
+### Throttle modes
+
+| Mode | Description |
+| --- | --- |
+| `:none` | No throttling, events fire immediately |
+| `{ms, :last}` | Keep only the last event per `ms` window |
+| `{ms, :all}` | Collect all events, flush every `ms` |
+
+### Log levels
+
+- `:emergency`
+- `:alert`
+- `:critical`
+- `:error`
+- `:warning`
+- `:notice`
+- `:info`
+- `:debug`
+
+### Key config options
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `:backend` | `Telemetria.Backend.Telemetry` | Telemetry backend module |
+| `:level` | `:debug` | Min level to emit events |
+| `:purge_level` | `:debug` | Events below this are removed at compile time |
+| `:throttle` | `:none` | Throttling strategy |
+| `:enabled` | `true` | Master switch |
+| `:strict` | `false` | Require explicit `if:` on every `@telemetria` |
+| `:process_info` | `false` | Include process info in events |

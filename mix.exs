@@ -92,7 +92,13 @@ defmodule Telemetria.MixProject do
       logo: "stuff/#{@app}-48x48.png",
       source_url: "https://github.com/am-kantox/#{@app}",
       assets: %{"stuff/img" => "assets"},
-      extras: ["README.md" | Path.wildcard("stuff/*.md")],
+      extra_section: "GUIDES",
+      extras:
+        ["README.md" | Path.wildcard("stuff/*.md")] ++
+          Path.wildcard("stuff/*.cheatmd"),
+      groups_for_extras: [
+        Cheatsheets: Path.wildcard("stuff/*.cheatmd")
+      ],
       groups_for_modules: [
         # Telemetria
         # Telemetria.Backend
