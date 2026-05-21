@@ -75,6 +75,30 @@ end
 
 The event is emitted only when the `if` function returns `true` for the result.
 
+### Multi-clause functions
+
+```elixir
+@telemetria level: :info, locals: [:i]
+def classify(i \\ nil)
+def classify(nil), do: :none
+def classify(i) when i > 0, do: :positive
+def classify(_i), do: :negative
+```
+
+For multi-clause functions, place `@telemetria` on the **bodyless head clause** (the one with defaults). All clauses will be wrapped. Do not mix head-level and per-clause annotations.
+
+### Per-clause annotations
+
+```elixir
+@telemetria level: :warning
+def handle(:error), do: alert()
+
+@telemetria level: :debug
+def handle(:ok), do: :ok
+```
+
+Alternatively, annotate individual clauses separately (each gets its own event with its own options). Cannot be combined with head-level annotation on the same function.
+
 ## Attribute Parameters
 {: .col-2}
 

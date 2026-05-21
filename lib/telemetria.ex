@@ -52,9 +52,27 @@ defmodule Telemetria do
   - **`reshape: (map() -> map())`** — the function to be called on the resulting attributes
     to reshape them before sending to the actual telemetry handler; the default application-wide
     reshaper might be set in `:telemetria, :reshaper` config
-  - **`messenger_channels: %{optional(atom()) => {module, keyword()}`** — more handy messenger
+  - **`messenger_channels: %{optional(atom()) => {module, keyword()}`** -- more handy messenger
     management, several channels config with channels names associated with their
     implementations and properties
+
+  > ### Multi-clause functions {: .warning}
+  >
+  > When a function has multiple clauses, the `@telemetria` attribute **must** be placed
+  > on the bodyless head clause (the one declaring defaults), not on individual clauses.
+  > This single annotation will wrap **all** clauses with telemetry.
+  >
+  > ```elixir
+  > @telemetria level: :info, locals: [:i]
+  > def classify(i \\ nil)       # <-- attribute goes here, on the head
+  > def classify(nil), do: :none
+  > def classify(i) when i > 0, do: :positive
+  > def classify(_i), do: :negative
+  > ```
+  >
+  > Placing `@telemetria` on individual clauses instead will annotate only those
+  > specific clauses. You may **not** mix head-level and clause-level annotations
+  > for the same function -- it will raise a compile-time error.
 
   ### Simple example
 
